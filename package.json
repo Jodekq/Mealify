@@ -38,6 +38,7 @@
 		"vite": "^5.0.3"
 	},
 	"dependencies": {
+		"@vercel/node": "^3.2.24",
 		"@vercel/postgres": "^0.10.0",
 		"preline": "^2.5.1"
 	}
