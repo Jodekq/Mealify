@@ -7,7 +7,7 @@
 </script>
 
 <nav class="container mt-8 flex justify-between mx-auto">
-	<a class="text-xl content-center" href="/">Plate Pilot</a>
+	<a class="text-xl content-center text-accent-foreground" href="/">Plate Pilot</a>
 	<div>
 		<div class="gap-x-16">
 			<Button href="/login" variant="link">Saved Plates</Button>
