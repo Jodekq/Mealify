@@ -1,0 +1,66 @@
+{
+	"name": "platepilot",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"format": "prettier --write .",
+		"lint": "prettier --check . && eslint ."
+	},
+	"devDependencies": {
+		"@eslint/compat": "^1.2.5",
+		"@eslint/js": "^9.18.0",
+		"@lucide/svelte": "^0.482.0",
+		"@sveltejs/adapter-auto": "^4.0.0",
+		"@sveltejs/kit": "^2.19.0",
+		"@sveltejs/vite-plugin-svelte": "^5.0.0",
+		"@tailwindcss/container-queries": "^0.1.1",
+		"@tailwindcss/forms": "^0.5.10",
+		"@tailwindcss/typography": "^0.5.16",
+		"@tailwindcss/vite": "^4.0.14",
+		"@types/bcrypt": "^5.0.2",
+		"autoprefixer": "^10.4.21",
+		"bits-ui": "^1.3.12",
+		"clsx": "^2.1.1",
+		"eslint": "^9.18.0",
+		"eslint-config-prettier": "^10.0.1",
+		"eslint-plugin-svelte": "^3.0.0",
+		"globals": "^16.0.0",
+		"postcss": "^8.5.3",
+		"postcss-import": "^16.1.0",
+		"prettier": "^3.4.2",
+		"prettier-plugin-svelte": "^3.3.3",
+		"prettier-plugin-tailwindcss": "^0.6.10",
+		"prisma": "^6.5.0",
+		"svelte": "^5.0.0",
+		"svelte-check": "^4.0.0",
+		"tailwind-merge": "^3.0.2",
+		"tailwind-variants": "^1.0.0",
+		"tailwindcss": "^4.0.14",
+		"tailwindcss-animate": "^1.0.7",
+		"typescript": "^5.0.0",
+		"typescript-eslint": "^8.20.0",
+		"vite": "^6.0.0"
+	},
+	"dependencies": {
+		"@lucia-auth/adapter-prisma": "^4.0.1",
+		"@tailwindcss/postcss": "^4.0.14",
+		"@toast-ui/editor": "^3.2.2",
+		"bcrypt": "^5.1.1",
+		"lucia": "^3.2.2",
+		"marked": "^15.0.7",
+		"oslo": "^1.2.1",
+		"rss": "^1.2.2"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"esbuild"
+		]
+	}
+}

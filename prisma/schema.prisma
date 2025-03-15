@@ -1,0 +1,104 @@
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id      String    @id @unique
+  session Session[]
+  Key     Key[]
+
+  meals    Meal[]    @relation("UserMeals")
+  schedule MealSchedule[]
+
+  username String @unique
+  password String
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
+}
+
+// model Session {
+//   id             String @id @unique
+//   user_id        String
+//   active_expires BigInt
+//   idle_expires   DateTime
+//   user           User   @relation(references: [id], fields: [user_id], onDelete: Cascade)
+
+//   @@index([user_id])
+//   @@map("session")
+// }
+
+model Key {
+  id              String  @id @unique
+  hashed_password String?
+  user_id         String
+  primary         Boolean
+  expires         BigInt?
+  user            User    @relation(references: [id], fields: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("key")
+}
+
+model Meal {
+  id          String    @id @unique @default(uuid())
+  user        User      @relation("UserMeals", fields: [user_id], references: [id], onDelete: Cascade)
+  user_id     String
+  name        String
+  workingTime Int
+  cookingTime Int
+  restTime    Int
+  totalTime   Int
+  portions    Int
+  ingredients MealIngredient[]
+  steps       MealStep[]
+  schedule    MealSchedule[]
+}
+
+model MealIngredient {
+  id           String      @id @unique @default(uuid())
+  meal         Meal        @relation(fields: [meal_id], references: [id], onDelete: Cascade)
+  meal_id      String
+  ingredient   Ingredient  @relation(fields: [ingredient_id], references: [id], onDelete: Cascade)
+  ingredient_id String
+  amount       Float
+}
+
+model Ingredient {
+  id   String  @id @unique @default(uuid())
+  name String  @unique
+  unit String 
+  meals MealIngredient[]
+}
+
+model MealStep {
+  id        String  @id @unique @default(uuid())
+  meal      Meal    @relation(fields: [meal_id], references: [id], onDelete: Cascade)
+  meal_id   String
+  stepNumber Int
+  text      String
+  extraText String?
+  description String?
+}
+
+model MealSchedule {
+  id      String  @id @unique @default(uuid())
+  user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id String
+  meal    Meal    @relation(fields: [meal_id], references: [id], onDelete: Cascade)
+  meal_id String
+  date    DateTime
+}
