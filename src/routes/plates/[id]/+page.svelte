@@ -4,27 +4,53 @@
 	import * as Card from "$lib/components/ui/card/index.js";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
   import { ScrollArea } from "$lib/components/ui/scroll-area/index.js";
+  import { Badge } from '$lib/components/ui/badge';
 
   import type { Meal } from "$lib/types";
 
-	let meal:Meal | null = null;
+  export let data: { 
+    meal: Meal & { 
+      scheduledDates?: { id: string, date: string }[] 
+    } 
+  };
+  const meal = data.meal;
 
-  let today = new Date();
-	today.setHours(0, 0, 0, 0);
-	let day: number = today.getDate(); 
-	let month: number = today.getMonth() + 1;
-
-	let formattedDate: string = `${day}.${month}`;
-
-	// Fetch today's meal
-	onMount(async () => {
-		const response = await fetch("/api/main_plate/");
-		const data = await response.json();
-		meal = data.meal; 
-	});
+  const formatTime = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  };
+  
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+  
+  // Remove a scheduled date
+  const removeScheduledDate = async (scheduleId: string) => {
+    try {
+      const response = await fetch(`/api/schedule?id=${scheduleId}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        // Refresh the page to see the updated schedule
+        window.location.reload();
+      } else {
+        console.error('Failed to remove scheduled date');
+      }
+    } catch (err) {
+      console.error('Error removing scheduled date:', err);
+    }
+  };
 </script>
 
-{#if meal}
+<div class="container mt-4 mx-auto">
 	<Card.Root class="mx-auto mb-4">
 		<Card.Header>
 			<div class="flex justify-between">
@@ -46,8 +72,21 @@
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
 				</div>
-				{#if formattedDate}
-				<div class="rounded-lg border px-2 content-center cursor-pointer bg-secondary text-sm font-medium">{formattedDate}</div>
+				{#if meal}
+				<div class="flex flex-wrap gap-2">
+					{#each meal.scheduledDates as schedule}
+						<Badge variant="secondary" class="flex items-center gap-2 py-1.5 px-3">
+							{formatDate(schedule.date)}
+							<button 
+								class="ml-1 text-xs hover:bg-gray-200 rounded-full w-4 h-4 flex items-center justify-center"
+								on:click|preventDefault={() => removeScheduledDate(schedule.id)}
+								aria-label="Remove date"
+							>
+								×
+							</button>
+						</Badge>
+					{/each}
+				</div>
 				{:else}
 					<Button variant="default"><i class='bx bx-plus'></i><div class="hidden sm:block">Schedule</div></Button> 
 				{/if}
@@ -94,9 +133,4 @@
 			</ScrollArea>
 		</Card.Content>		
 	</Card.Root>
-{:else}
-	<div class="flex flex-col items-center justify-center h-full">
-		<p class="text-lg font-medium">No planned meal today</p>
-		<Button variant="default">Click here to add one</Button> 
-	</div>
-{/if}
+</div>

@@ -1,6 +1,5 @@
 import { lucia } from "$lib/server/auth";
 import { fail, redirect } from "@sveltejs/kit";
-import { PrismaClient } from "@prisma/client";
 
 export const actions = {
  logout: async (event) => {

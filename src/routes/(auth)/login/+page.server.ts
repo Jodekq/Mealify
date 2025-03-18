@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { lucia } from "$lib/server/auth.js";
 import { fail, redirect, type Actions } from "@sveltejs/kit";
-import { Argon2id } from "oslo/password";
+import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
@@ -16,7 +16,7 @@ export const actions:Actions = {
         if(!user){
             return fail(400, {message: "Incorrect username or password"})
         }
-        const validPassword = password === user.password; 
+        const validPassword = await bcrypt.compare(password, user.password);
         if(!validPassword){
             return fail(400, {message: "Incorrect username or password"})
         }

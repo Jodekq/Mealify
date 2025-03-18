@@ -6,19 +6,17 @@
   export let data
 </script>
 
-<nav class="container mt-8 flex justify-between mx-auto">
+<nav class="container pt-8 flex justify-between mx-auto">
 	<a class="text-xl content-center text-accent-foreground" href="/">Plate Pilot</a>
 	<div>
-		<div class="gap-x-16">
-			<Button href="/login" variant="link">Saved Plates</Button>
-			<Button href="/login" variant="link">Add Plate</Button>
-		</div>
+		<Button class="px-2 sm:px-4" href="/saved_plates" variant="link">Saved Plates</Button>
+		<Button class="px-2 sm:px-4" href="/add_plate" variant="link">Add Plate</Button>
 	</div>
 	{#if data.user}
 		<form action="/?/logout" method="post" use:enhance>
-			<Button type="submit" variant="outline">Log Out</Button>
+			<Button class="pl-3" type="submit" variant="outline"><i class='bx bx-log-out'></i><div class="hidden sm:block">Log Out</div></Button>
 		</form>
 	{:else}
-		<Button href="/login" variant="outline">Log In</Button>
+		<Button class="pl-3" href="/login" variant="outline"><i class='bx bx-log-in'></i><div class="hidden sm:block">Log In</div></Button>
 	{/if}
 </nav>
