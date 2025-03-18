@@ -37,11 +37,11 @@
 						</DropdownMenu.Trigger>
 						<DropdownMenu.Content>
 							<DropdownMenu.Group>
-								<DropdownMenu.GroupHeading>Total time: {meal.totalTime} min</DropdownMenu.GroupHeading>
+								<DropdownMenu.Label>Total time: {meal.totalTime} min</DropdownMenu.Label>
 								<DropdownMenu.Separator />
-								<DropdownMenu.GroupHeading>Working time: {meal.workingTime} min</DropdownMenu.GroupHeading>
-								<DropdownMenu.GroupHeading>Cooking time: {meal.cookingTime} min</DropdownMenu.GroupHeading>
-								<DropdownMenu.GroupHeading>Rest time: {meal.restTime} min</DropdownMenu.GroupHeading>
+								<DropdownMenu.Item>Working time: {meal.workingTime} min</DropdownMenu.Item>
+								<DropdownMenu.Item>Cooking time: {meal.cookingTime} min</DropdownMenu.Item>
+								<DropdownMenu.Item>Rest time: {meal.restTime} min</DropdownMenu.Item>
 							</DropdownMenu.Group>
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
@@ -55,7 +55,7 @@
 			</div>
 		</Card.Header>
 		<Card.Content class="flex flex-col sm:flex-row gap-4">
-			<div class="flex flex-col gap-2 rounded-lg border p-2 sticky top-0">
+			<div class="flex flex-col gap-2 rounded-lg border p-2">
 				<div class="text-sm font-medium w-full flex justify-center sm:justify-start">
 					<div class="flex flex-row rounded-lg bg-secondary px-2 py-2 border w-fit">
 						<label for="portions" class="text-m font-medium">Portions: </label>
@@ -97,6 +97,6 @@
 {:else}
 	<div class="flex flex-col items-center justify-center h-full">
 		<p class="text-lg font-medium">No planned meal today</p>
-		<Button variant="default">Click here to add one</Button> 
+		<Button variant="default" href="/add_plate">Click here to add one</Button> 
 	</div>
 {/if}

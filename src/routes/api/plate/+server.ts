@@ -172,25 +172,26 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 };
 
 // Delete a meal schedule
-export const DELETE: RequestHandler = async ({ url, locals }) => {
+export const DELETE: RequestHandler = async ({ url, request, locals }) => {
   const userId = locals.user?.id;
-  
+
   if (!userId) {
     throw error(401, 'Unauthorized');
   }
 
-  const scheduleId = url.searchParams.get('id');
-  
-  if (!scheduleId) {
-    throw error(400, 'Schedule ID is required');
+  const { date } = await request.json();
+  const mealId = url.searchParams.get('id');
+
+  if (!mealId || !date) {
+    throw error(400, 'Missing required fields');
   }
 
   try {
-    // Verify schedule belongs to user
-    const schedule = await prisma.mealSchedule.findUnique({
+    const schedule = await prisma.mealSchedule.findFirst({
       where: {
-        id: scheduleId,
-        user_id: userId
+        user_id: userId,
+        meal_id: mealId,
+        date: new Date(date),
       }
     });
 
@@ -198,14 +199,13 @@ export const DELETE: RequestHandler = async ({ url, locals }) => {
       throw error(404, 'Schedule not found');
     }
 
-    // Delete the schedule
     await prisma.mealSchedule.delete({
-      where: { id: scheduleId }
+      where: { id: schedule.id }
     });
 
     return json({ success: true });
   } catch (err) {
-    console.error('Error removing scheduled meal:', err);
-    throw error(500, 'Error removing scheduled meal');
+    console.error('Error deleting schedule:', err);
+    throw error(500, 'Error deleting schedule');
   }
 };

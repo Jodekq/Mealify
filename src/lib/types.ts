@@ -1,3 +1,4 @@
+//src/lib/types.ts
 export type Ingredient = {
   id: string;
   name: string;
