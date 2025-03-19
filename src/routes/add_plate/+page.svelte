@@ -48,7 +48,7 @@
         }))
       };
       
-      const response = await fetch('/api/add_plate', {
+      const response = await fetch('/api/meals', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -87,7 +87,6 @@
 
   function addIngredient() {
     ingredients = [...ingredients, { id: crypto.randomUUID(), amount: '', unit: '', name: '' }];
-    console.log("Hi")
   }
 
   function removeIngredient(id) {

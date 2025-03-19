@@ -17,12 +17,18 @@
   let saveSuccess = false;
   let saveError = false;
 
+  export let data: { 
+    meal: Meal & { 
+      scheduledDates?: ScheduledDate[] 
+    } 
+  };
+  const meal = data.meal;
+
 	// Generate dates for the next 20 days
 	let dates = Array.from({ length: 20 }, (_, i) => {
 	  const dateTime = new Date();
 		dateTime.setDate(dateTime.getDate() + i);
 		const today = dateTime.toISOString().split('T')[0]; // Use YYYY-MM-DD string format
-		console.log(today);
 	  return today;
 	});
 
@@ -34,7 +40,7 @@
     
     // Fetch available dates from API
     try {
-      const res = await fetch(`/api/plates/${meal.id}/schedule`);
+      const res = await fetch(`/api/meals/${meal.id}`);
       const data = await res.json();
       availableDates = data.days.map(day => day.date);
     } catch (error) {
@@ -68,7 +74,7 @@
     
     try {
       // Send the selected dates as strings (YYYY-MM-DD)
-      const response = await fetch(`/api/plates/${meal.id}/schedule`, {
+      const response = await fetch(`/api/schedule/${meal.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -89,13 +95,6 @@
       isLoading = false;
     }
   }
-
-  export let data: { 
-    meal: Meal & { 
-      scheduledDates?: ScheduledDate[] 
-    } 
-  };
-  const meal = data.meal;
 
   const formatTime = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
@@ -137,7 +136,7 @@
 						</Button>
 					</Popover.Trigger>
 					<Popover.Content>
-						<h3 class="text-lg font-semibold mb-2">Select dates to schedule plate</h3>
+						<h3 class="text-lg font-semibold mb-2">Schedule plate</h3>
 						<div class="grid grid-cols-5 gap-2 mb-4 text-white">
 							{#each dates as date}
 							<Button
@@ -170,7 +169,7 @@
           <Button variant="outline" class="content-center" href={`/plates/${meal.id}/edit`}>
             <i class='bx bx-edit-alt'></i><div class="hidden sm:block pl-1">Edit</div>
           </Button>
-          <Button variant="destructive" class="px-2 py-1" href="/saved_plates">
+          <Button variant="destructive" class="px-2 py-1" onclick={() => window.history.back()}>
             <i class='bx bx-x text-lg'></i><div class="hidden sm:block">Close</div>
           </Button>
         </div>

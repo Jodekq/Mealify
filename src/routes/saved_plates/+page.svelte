@@ -2,15 +2,13 @@
   import { onMount } from "svelte";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import * as Card from "$lib/components/ui/card/index.js";
-  import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
-  import { ScrollArea } from "$lib/components/ui/scroll-area/index.js";
   import { Skeleton } from "$lib/components/ui/skeleton";
 
   let meals = [];
   let isGridLayout = true; 
 
   onMount(async () => {
-    const response = await fetch('/api/saved_plates'); 
+    const response = await fetch('/api/meals'); 
     const data = await response.json();
     if (data.meals) {
       meals = data.meals;

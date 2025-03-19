@@ -9,6 +9,8 @@ export type MealIngredient = {
   id: string;
   ingredient: Ingredient; 
   amount: number;
+  unit: string;
+  name: string;
 };
 
 export type MealStep = {

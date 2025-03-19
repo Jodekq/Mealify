@@ -1,6 +1,7 @@
 import { error, json } from '@sveltejs/kit';
 import { PrismaClient } from '@prisma/client';
 import type { RequestEvent } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 const prisma = new PrismaClient();
 

@@ -16,9 +16,9 @@ export async function GET({ locals }) {
     const scheduledMeal = await prisma.mealSchedule.findFirst({
       where: {
         user_id: userId,
-				date: {
-					equals: today,
-				},
+        date: {
+          equals: today,
+        },
       },
       include: {
         meal: {

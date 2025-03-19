@@ -18,7 +18,7 @@
 
 	// Fetch today's meal
 	onMount(async () => {
-		const response = await fetch("/api/main_plate/");
+		const response = await fetch("/api/meals/today");
 		const data = await response.json();
 		meal = data.meal; 
 	});
@@ -95,8 +95,8 @@
 		</Card.Content>		
 	</Card.Root>
 {:else}
-	<div class="flex flex-col items-center justify-center h-full">
+	<div class="flex flex-col items-center justify-center h-full pb-8">
 		<p class="text-lg font-medium">No planned meal today</p>
-		<Button variant="default" href="/add_plate">Click here to add one</Button> 
+		<Button variant="default" href="/saved_plates">Click here to add one</Button> 
 	</div>
 {/if}

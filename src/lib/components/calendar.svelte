@@ -2,8 +2,9 @@
   import { onMount } from "svelte";
   import { addDays, format } from "date-fns";
   import * as Card from "$lib/components/ui/card";
+  import { Button } from "$lib/components/ui/button/index.js";
 
-  let meals: Record<string, { name: string; totalTime: number } | null> = {};
+  let meals: Record<string, Array<{ name: string; totalTime: number, id: string }>> = {};
 
   let today = new Date();
   today.setHours(0, 0, 0, 0); // Reset time to midnight
@@ -15,11 +16,11 @@
 
   onMount(async () => {
     try {
-      const response = await fetch("/api/calendar");
+      const response = await fetch("/api/schedule");
       if (!response.ok) throw new Error("Failed to fetch data");
 
       const data = await response.json();
-      meals = Object.assign({}, data.meals || {}); // Ensure reactivity
+      meals = Object.assign({}, data.meals || {}); 
     } catch (error) {
       console.error("Error fetching meals:", error);
     }
@@ -29,16 +30,20 @@
 <div class="font-bold text-2xl content-center flex justify-center">Calendar</div>
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-4">
   {#each days as { date, formatted }}
-  <Card.Root class="p-2 sm:p-4 {formatted === format(today, 'yyyy-MM-dd') ? 'border-accent' : 'border-secondary'}">
-    <Card.Header>
+  <Card.Root class="p-2 {formatted === format(today, 'yyyy-MM-dd') ? 'border-accent' : 'border-secondary'}">
+    <Card.Header class="px-2 py-2 pb-0">
       <Card.Title class="text-sm sm:text-base">{format(date, "MMM dd")}</Card.Title>
     </Card.Header>
-    <Card.Content>
-      {#if meals[formatted]}
-        <div class="text-xs sm:text-sm flex gap-1">
-          <div>{meals[formatted].name}</div>
-          <div class="text-[10px] sm:text-xs">{meals[formatted].totalTime} min</div>
-        </div>
+    <Card.Content class="px-2 py-2 flex flex-col gap-1">
+      {#if meals[formatted] && meals[formatted].length > 0}
+        {#each meals[formatted] as meal}
+        <Button variant="outline" href={`/plates/${meal.id}`}>
+          <div class="text-xs sm:text-sm flex gap-1">
+            <div>{meal.name}</div>
+            <div class="text-[10px] sm:text-xs">{meal.totalTime} min</div>
+          </div>
+        </Button>
+        {/each}
       {:else}
         <div class="text-[10px] sm:text-xs">No meal planned</div>
       {/if}
