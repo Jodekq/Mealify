@@ -1,8 +1,6 @@
 <script lang="ts">
 	import Plate from "$lib/components/plate.svelte";
 	import Calendar from "$lib/components/calendar.svelte";
-
-  export let data
 </script>
 
 <main class="container mt-4 mx-auto">

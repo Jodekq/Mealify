@@ -20,7 +20,6 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 export async function PUT({ params, request }) {
   const { id } = params;
   const data = await request.json();
-  console.log(data);
 
   const updatedMeal = await prisma.meal.update({
     where: { id },
@@ -61,7 +60,6 @@ export async function PUT({ params, request }) {
   return json(updatedMeal);
 }
 
-// DELETE remove a meal
 export async function DELETE({ params }) {
   const { id } = params;
   await prisma.meal.delete({ where: { id } });

@@ -7,6 +7,9 @@
   import * as Select from "$lib/components/ui/select";
   import { Textarea } from "$lib/components/ui/textarea/index.js";
   import { Toaster } from "$lib/components/ui/sonner";
+  import { toast } from "svelte-sonner";
+  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+  import { buttonVariants } from "$lib/components/ui/button/index.js";
 
   import type { Meal } from "$lib/types";
 
@@ -57,8 +60,6 @@
         description: step.description
       })) : [];
 
-      
-      
     } catch (error) {
       console.error("Failed to initialize form:", error);
     }
@@ -86,10 +87,6 @@ async function handleSubmit() {
       }))
     };
 
-    console.log(updatedMeal);
-    console.log(selectedUnit);
-    console.log("ingred");
-
     try {
       const response = await fetch(`/api/meals/${mealId}`, {
         method: 'PUT',
@@ -100,20 +97,22 @@ async function handleSubmit() {
       });
 
       if (response.ok) {
-        successMessage = 'Meal updated successfully!';
-        // Optionally, you can reload the updated data
+        toast.success('Meal updated successfully!');
         const updatedData = await response.json();
-        // You could set this data to your local state as well
       } else {
         const errorData = await response.json();
-        errorMessage = errorData.message || 'Failed to update meal';
+        toast.error(errorData.message || 'Failed to update meal');
       }
     } catch (error) {
-      errorMessage = 'An error occurred while updating the meal.';
-      console.error(error);
+      toast.error(errorMessage);
     } finally {
       isSubmitting = false;
     }
+  }
+
+  function deleteMeal() {
+    fetch(`/api/meals/${mealId}`, { method: 'DELETE' });
+    toast.success('Meal deleted successfully!');
   }
 
   function addIngredient() {
@@ -134,24 +133,20 @@ async function handleSubmit() {
       number: index + 1
     }));
   }
+
+  function selectUnit(ingredientId, selectedUnit) {
+    ingredients = ingredients.map(ingredient => 
+      ingredient.id === ingredientId 
+        ? { ...ingredient, unit: selectedUnit.value || selectedUnit } 
+        : ingredient
+    );
+  }
 </script>
 
 <div class="mt-4 mx-auto px-2 sm:container">
   <Card.Root class="mx-auto mb-4">
     <Card.Content class="flex gap-4">
       <form on:submit|preventDefault={handleSubmit} class="space-y-4 w-full flex flex-col">
-        {#if errorMessage}
-          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-            {errorMessage}
-          </div>
-        {/if}
-        
-        {#if successMessage}
-          <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
-            {successMessage}
-          </div>
-        {/if}
-        
         <div class="flex gap-4">
           <div class="w-3/4">
             <Label class="pl-1" for="name">Plate Name</Label>
@@ -161,10 +156,28 @@ async function handleSubmit() {
             <Label class="pl-1" for="portions">Portions</Label>
             <Input type="number" id="portions" bind:value={portions} placeholder="portions" />
           </div>
-          <div class="w-1/4 self-end flex justify-end">
+          <div class="w-1/4 self-end flex justify-end gap-2">
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : 'Update Meal'}
+              {isSubmitting ? 'Saving...' : 'Save'}
             </Button>
+            <AlertDialog.Root>
+              <AlertDialog.Trigger class={buttonVariants({ variant: "destructive" })}>
+                Delete
+              </AlertDialog.Trigger>
+              <AlertDialog.Content>
+                <AlertDialog.Header>
+                  <AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
+                  <AlertDialog.Description>
+                    This action cannot be undone. This will permanently delete the meal
+                    and remove the data from the servers.
+                  </AlertDialog.Description>
+                </AlertDialog.Header>
+                <AlertDialog.Footer>
+                  <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+                  <AlertDialog.Action class={buttonVariants({ variant: "destructive" })} onclick={deleteMeal}>Continue</AlertDialog.Action>
+                </AlertDialog.Footer>
+              </AlertDialog.Content>
+            </AlertDialog.Root>
           </div>
         </div>
         <div class="flex gap-4">
@@ -193,11 +206,9 @@ async function handleSubmit() {
             <div class="sm:w-1/4 w-2/4">
               <!-- look at code of select hing at svelte shadcn website they did it with bind:value -->
               <Label class="pl-1" for={`unit-${ingredient.id}`}>Unit</Label> 
-              <Select.Root>
-                <Select.Trigger>
-                  <Select.Value placeholder="{ingredient.unit || 'unit'}"></Select.Value>
-                </Select.Trigger>
-                <Select.Content class="w-[180px]">
+              <Select.Root onSelectedChange={(selected) => selectUnit(ingredient.id, selected)}>
+                <Select.Trigger class="w-[180px]">{ingredient.unit || 'Select unit'}</Select.Trigger>
+                <Select.Content>
                   <Select.Item value="grams">g (grams)</Select.Item>
                   <Select.Item value="kilograms">kg (kilograms)</Select.Item>
                   <Select.Item value="milliliters">ml (milliliters)</Select.Item>
@@ -222,12 +233,16 @@ async function handleSubmit() {
           <Button variant="outline" class="content-center mb-4" type="button" onclick={addStep}><i class='bx bx-plus'></i> Add Step</Button>
             {#each steps as step (step.id)}
               <div class="shadow-md space-y-2 flex flex-col sm:flex-row gap-4 p-2 mb-2">
-                <div class="sm:w-1/3 w-full flex flex-col gap-2">
+                <div class="sm:w-1/3 w-full flex flex-col gap-3">
                   <div class="text-m font-medium pl-1">Step {step.number}</div>
-                  <Label class="pl-1" for={`step_text-${step.id}`}>Step Text</Label>
-                  <Input type="text" id={`step_text-${step.id}`} bind:value={step.text} placeholder="short description" />
-                  <Label class="pl-1" for={`extra_text-${step.id}`}>Extra Text</Label>
-                  <Input type="text" id={`extra_text-${step.id}`} bind:value={step.extra_text} placeholder="working time or °C" />
+                  <div>
+                    <Label class="pl-1" for={`step_text-${step.id}`}>Step Text</Label>
+                    <Input type="text" id={`step_text-${step.id}`} bind:value={step.text} placeholder="short description" />
+                  </div>
+                  <div>
+                    <Label class="pl-1" for={`extra_text-${step.id}`}>Extra Text</Label>
+                    <Input type="text" id={`extra_text-${step.id}`} bind:value={step.extra_text} placeholder="working time or °C" />
+                  </div>
                 </div>
                 <div class="sm:w-2/3 w-full">
                   <Label for={`description-${step.id}`} class="pl-1">Step {step.number} description</Label>

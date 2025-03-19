@@ -14,9 +14,9 @@
 	</div>
 	{#if data.user}
 		<form action="/?/logout" method="post" use:enhance>
-			<Button class="pl-3" type="submit" variant="outline"><i class='bx bx-log-out'></i><div class="hidden sm:block">Log Out</div></Button>
+			<Button class="pl-3" type="submit" variant="outline"><i class='bx bx-log-out text-base'></i><div class="hidden sm:block pl-1">Log Out</div></Button>
 		</form>
 	{:else}
-		<Button class="pl-3" href="/login" variant="outline"><i class='bx bx-log-in'></i><div class="hidden sm:block">Log In</div></Button>
+		<Button class="pl-3" href="/login" variant="outline"><i class='bx bx-log-in text-base'></i><div class="hidden sm:block pl-1">Log In</div></Button>
 	{/if}
 </nav>

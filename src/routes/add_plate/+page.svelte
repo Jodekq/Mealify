@@ -72,16 +72,6 @@
       isSubmitting = false;
     }
   }
-  
-  function resetForm() {
-    name = '';
-    portions = 1;
-    workingTime = 0;
-    cookingTime = 0;
-    restTime = 0;
-    ingredients = [];
-    steps = [];
-  }
 
   let ingredients = [];
 
@@ -120,18 +110,6 @@
   <Card.Root class="mx-auto mb-4">
     <Card.Content class="flex gap-4">
       <form on:submit|preventDefault={handleSubmit} class="space-y-4 w-full flex flex-col">
-        {#if errorMessage}
-          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-            {errorMessage}
-          </div>
-        {/if}
-        
-        {#if successMessage}
-          <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
-            {successMessage}
-          </div>
-        {/if}
-        
         <div class="flex gap-4">
           <div class="w-3/4">
             <Label class="pl-1" for="name">Plate Name</Label>
@@ -163,9 +141,9 @@
         </div>
         <div class="border p-2 rounded-lg">
           <div class="text-lg font-medium pb-2">Ingredients</div>
-          <Button variant="outline" class="content-center" type="button" onclick={addIngredient}><i class='bx bx-plus'></i> Add Ingredient</Button>
+          <Button variant="outline" class="content-center mb-4" type="button" onclick={addIngredient}><i class='bx bx-plus'></i> Add Ingredient</Button>
           {#each ingredients as ingredient (ingredient.id)}
-          <div class="flex gap-2 pt-2">
+          <div class="flex gap-2">
             <div class="w-1/4">
               <Label class="pl-1" for={`amount-${ingredient.id}`}>Amount</Label>
               <Input type="number" id={`amount-${ingredient.id}`} bind:value={ingredient.amount} placeholder="number" />
@@ -174,9 +152,7 @@
               <Label class="pl-1" for={`unit-${ingredient.id}`}>Unit</Label>
               <Select.Root onSelectedChange={(selected) => selectUnit(ingredient.id, selected)}>
                 <Select.Trigger>
-                  <Select.Value placeholder="unit">
-                    {ingredient.unit || 'Select unit'}
-                  </Select.Value>
+                  {ingredient.unit || 'Select unit'}
                 </Select.Trigger>
                 <Select.Content class="w-[180px]">
                   <Select.Item value="grams">g (grams)</Select.Item>
@@ -202,13 +178,17 @@
           <div class="text-lg font-medium pb-2">Description</div>
           <Button variant="outline" class="content-center mb-4" type="button" onclick={addStep}><i class='bx bx-plus'></i> Add Step</Button>
             {#each steps as step (step.id)}
-              <div class="shadow-md space-y-2 flex flex-col sm:flex-row gap-4 p-2 mb-2">
-                <div class="sm:w-1/3 w-full flex flex-col gap-2">
+              <div class="shadow-md space-y-2 flex flex-col sm:flex-row gap-4 mb-2">
+                <div class="sm:w-1/3 w-full flex flex-col gap-3">
                   <div class="text-m font-medium pl-1">Step {step.number}</div>
-                  <Label class="pl-1" for={`step_text-${step.id}`}>Step Text</Label>
-                  <Input type="text" id={`step_text-${step.id}`} bind:value={step.text} placeholder="short description" />
-                  <Label class="pl-1" for={`extra_text-${step.id}`}>Extra Text</Label>
-                  <Input type="text" id={`extra_text-${step.id}`} bind:value={step.extra_text} placeholder="working time or °C" />
+                  <div>
+                    <Label class="pl-1" for={`step_text-${step.id}`}>Step Text</Label>
+                    <Input type="text" id={`step_text-${step.id}`} bind:value={step.text} placeholder="short description" />
+                  </div>
+                  <div>
+                    <Label class="pl-1" for={`extra_text-${step.id}`}>Extra Text</Label>
+                    <Input type="text" id={`extra_text-${step.id}`} bind:value={step.extra_text} placeholder="working time or °C" />
+                  </div>
                 </div>
                 <div class="sm:w-2/3 w-full">
                   <Label for={`description-${step.id}`} class="pl-1">Step {step.number} description</Label>
