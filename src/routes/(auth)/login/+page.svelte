@@ -5,7 +5,7 @@
 </script>
 
 <div class="w3-card w3-margin w3-padding">
-	<form class="w3-container" method="post" use:enhance>
+	<form class="w3-container" method="post">
 		<div class="flex h-screen w-full items-center justify-center px-4">
 			<LoginForm />
 		</div>

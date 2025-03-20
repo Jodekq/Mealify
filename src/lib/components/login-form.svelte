@@ -40,7 +40,7 @@
 
 <Card.Root 
 	class="relative mx-auto max-w-sm overflow-hidden"
-	on:submit={handleSubmit}
+	onsubmit={handleSubmit}
 >
 	<!-- Progress Border -->
 	<div
