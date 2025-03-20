@@ -1,8 +1,6 @@
 import { error } from '@sveltejs/kit';
-import { PrismaClient } from '@prisma/client';
+import prisma from '$lib/prismaClient';
 import type { PageServerLoad } from './$types';
-
-const prisma = new PrismaClient();
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const userId = locals.user?.id;

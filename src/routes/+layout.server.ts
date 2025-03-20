@@ -1,8 +1,5 @@
 import { lucia } from "$lib/server/auth";
-import { fail, redirect } from "@sveltejs/kit";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from '$lib/prismaClient';
 
 export const load = async ({ cookies }) => {
   const sessionId = cookies.get("auth_session");

@@ -1,8 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '$lib/prismaClient';
 
 // GET a single meal
 export const GET: RequestHandler = async ({ params, locals }) => {

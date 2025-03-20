@@ -1,9 +1,6 @@
 import { error, json } from '@sveltejs/kit';
-import { PrismaClient } from '@prisma/client';
+import prisma from '$lib/prismaClient';
 import type { RequestEvent } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
-
-const prisma = new PrismaClient();
 
 // Explicitly type the request handler with params
 export async function POST({ params, request, locals }: RequestEvent) {

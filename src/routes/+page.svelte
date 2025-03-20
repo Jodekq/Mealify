@@ -4,7 +4,7 @@
 	import Info from "$lib/components/info.svelte";
 </script>
 
-<main class="sm:container mt-4 mx-auto px-2 sm:px-0">
+<main class="sm:container mt-4 mx-auto px-2">
 	<Plate />
 	<Calendar />
 	<Info />

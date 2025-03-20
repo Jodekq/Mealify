@@ -1,31 +1,27 @@
-import { PrismaClient } from '@prisma/client';
-import { lucia } from "$lib/server/auth.js";
+import prisma from '$lib/prismaClient';
+import { lucia } from "$lib/server/auth";
 import { fail, redirect, type Actions } from "@sveltejs/kit";
 import bcrypt from "bcrypt";
 
-const prisma = new PrismaClient();
-
-export const actions:Actions = {
+export const actions: Actions = {
     default: async ({ request, cookies }) => {
-        const {username, password } = Object.fromEntries(await request.formData()) as Record<string, string>
+        const { username, password } = Object.fromEntries(await request.formData()) as Record<string, string>;
+
         const user = await prisma.user.findUnique({
-            where: {
-                username: username
-            }
-        })
-        if(!user){
-            return fail(400, {message: "Incorrect username or password"})
+            where: { username }
+        });
+
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return fail(400, { message: "Incorrect username or password" });
         }
-        const validPassword = await bcrypt.compare(password, user.password);
-        if(!validPassword){
-            return fail(400, {message: "Incorrect username or password"})
-        }
-        const session = await lucia.createSession(user.id, [])
+
+        const session = await lucia.createSession(user.id, []);
         const sessionCookie = lucia.createSessionCookie(session.id);
         cookies.set(sessionCookie.name, sessionCookie.value, {
-            path:".",
+            path: ".",
             ...sessionCookie.attributes
-        })
-        redirect(302, "/")
+        });
+
+        redirect(302, "/");
     }
 };

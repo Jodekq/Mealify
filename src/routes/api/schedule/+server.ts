@@ -1,9 +1,7 @@
 import { error, json } from '@sveltejs/kit';
-import { PrismaClient } from '@prisma/client';
 import type { RequestEvent } from '@sveltejs/kit';
 import { format, addDays } from "date-fns";
-
-const prisma = new PrismaClient();
+import prisma from '$lib/prismaClient';
 
 export async function GET({ locals }) {
   try {
