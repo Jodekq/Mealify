@@ -1,3 +1,4 @@
+// hooks.server.ts
 import { lucia } from "$lib/server/auth";
 import type { Handle } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
@@ -62,6 +63,7 @@ const authMiddleware: Handle = async ({ event, resolve }) => {
   const sessionId = event.cookies.get(lucia.sessionCookieName);
   
   if (!sessionId) {
+    console.log('No session ID found');
     event.locals.user = null;
     event.locals.session = null;
     return resolve(event);

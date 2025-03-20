@@ -1,9 +1,12 @@
-//lib/prismaClient.ts
+// lib/prismaClient.ts
 import { PrismaClient } from '@prisma/client';
 
-const prismaClientSingleton = () => {
-  return new PrismaClient({
-    // Add log levels if you want to debug
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+export const prisma = globalForPrisma.prisma ?? 
+  new PrismaClient({
     log: ['query', 'error', 'warn'],
     datasources: {
       db: {
@@ -11,21 +14,34 @@ const prismaClientSingleton = () => {
       }
     }
   });
-};
 
-// Define type for global prisma
-type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>;
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClientSingleton | undefined;
-};
+// Add connection error handling
+prisma.$connect()
+  .then(() => {
+    console.log('Successfully connected to database');
+  })
+  .catch((e) => {
+    console.error('Failed to connect to database:', e);
+  });
 
-// Check if we need to create a new client
-const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
+// Add middleware for handling connection errors
+prisma.$use(async (params, next) => {
+  try {
+    return await next(params);
+  } catch (error: any) {
+    if (error?.message?.includes('prepared statement')) {
+      console.log('Retrying query due to prepared statement error');
+      return next(params);
+    }
+    throw error;
+  }
+});
 
-// Make sure to clean up in development
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
-}
+// Add shutdown handling
+process.on('beforeExit', async () => {
+  await prisma.$disconnect();
+});
 
 export default prisma;

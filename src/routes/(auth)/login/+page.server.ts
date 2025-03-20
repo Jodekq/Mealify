@@ -17,11 +17,18 @@ export const actions: Actions = {
 
         const session = await lucia.createSession(user.id, []);
         const sessionCookie = lucia.createSessionCookie(session.id);
+        
+        console.log('Creating session cookie:', {
+            name: sessionCookie.name,
+            path: sessionCookie.attributes.path,
+            secure: sessionCookie.attributes.secure
+        });
+
         cookies.set(sessionCookie.name, sessionCookie.value, {
             path: ".",
             ...sessionCookie.attributes
         });
 
-        redirect(302, "/");
+        throw redirect(302, "/");
     }
 };

@@ -8,12 +8,19 @@
   let isGridLayout = true; 
 
   onMount(async () => {
-    const response = await fetch('/api/meals'); 
+  try {
+    const response = await fetch('/api/meals');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     const data = await response.json();
     if (data.meals) {
       meals = data.meals;
     }
-  });
+  } catch (error) {
+    console.error("Error fetching meals:", error);
+  }
+});
 
   function toggleLayout() {
     isGridLayout = !isGridLayout;
