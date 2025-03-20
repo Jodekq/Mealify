@@ -54,5 +54,6 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Nunito Variable', sans-serif;
   }
 }

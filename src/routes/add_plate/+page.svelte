@@ -6,6 +6,7 @@
   import { Label } from "$lib/components/ui/label/index.js";
   import * as Select from "$lib/components/ui/select";
   import { Textarea } from "$lib/components/ui/textarea/index.js";
+  import { toast } from "svelte-sonner";
   
   let name = '';
   let portions = 1;
@@ -19,12 +20,10 @@
   async function handleSubmit() {
     try {
       isSubmitting = true;
-      errorMessage = '';
-      successMessage = '';
       
       // Validate form
       if (!name) {
-        errorMessage = 'Please enter a meal name';
+        toast.error('Please enter a meal name');
         isSubmitting = false;
         return;
       }
@@ -59,15 +58,13 @@
       const result = await response.json();
       
       if (response.ok) {
-        successMessage = 'Meal saved successfully!';
-        // Optional: Reset form
-        // resetForm();
+        toast.success('Meal saved successfully');
       } else {
-        errorMessage = result.error || 'Failed to save meal';
+        toast.error(errorMessage);
       }
     } catch (error) {
       console.error('Error saving meal:', error);
-      errorMessage = 'An error occurred while saving the meal';
+      toast.error('An error occurred while saving the meal');
     } finally {
       isSubmitting = false;
     }
@@ -179,7 +176,7 @@
           <Button variant="outline" class="content-center mb-4" type="button" onclick={addStep}><i class='bx bx-plus'></i> Add Step</Button>
             {#each steps as step (step.id)}
               <div class="shadow-md space-y-2 flex flex-col sm:flex-row gap-4 mb-2">
-                <div class="sm:w-1/3 w-full flex flex-col gap-3">
+                <div class="sm:w-1/3 w-full flex flex-col gap-2">
                   <div class="text-m font-medium pl-1">Step {step.number}</div>
                   <div>
                     <Label class="pl-1" for={`step_text-${step.id}`}>Step Text</Label>

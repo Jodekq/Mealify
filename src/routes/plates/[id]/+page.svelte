@@ -11,7 +11,6 @@
   import type { Meal, ScheduledDate } from "$lib/types";
 
 	let selectedDates: string[] = [];  // Store dates as strings (YYYY-MM-DD format)
-  let showPopover = false;
   let availableDates: string[] = [];
   let isLoading = false;
   let saveSuccess = false;
@@ -22,7 +21,10 @@
       scheduledDates?: ScheduledDate[] 
     } 
   };
-  const meal = data.meal;
+  let meal = data.meal;
+  let originalMeal = JSON.parse(JSON.stringify(data.meal)); 
+  let portions = data.meal.portions || 1; 
+  let originalPortions = data.meal.portions || 1;
 
 	// Generate dates for the next 20 days
 	let dates = Array.from({ length: 20 }, (_, i) => {
@@ -32,45 +34,50 @@
 	  return today;
 	});
 
-	onMount(async () => {
-	  // Load already scheduled dates from the meal data
+  onMount(async () => {
     if (meal.scheduledDates && meal.scheduledDates.length > 0) {
-      selectedDates = meal.scheduledDates.map(scheduledDate => scheduledDate.date); // Directly use date strings
+      selectedDates = meal.scheduledDates.map(scheduledDate => scheduledDate.date);
     }
     
-    // Fetch available dates from API
     try {
       const res = await fetch(`/api/meals/${meal.id}`);
       const data = await res.json();
       availableDates = data.days.map(day => day.date);
+     
     } catch (error) {
-      console.error("Failed to fetch available dates:", error);
+      console.error("Error fetching available dates:", error);
     }
-	});
+  });
 
-  // Toggle date selection
-	function toggleDate(date: string) {
-	  const index = selectedDates.indexOf(date);
-	  
-	  if (index !== -1) {
-	    // Remove the date if already selected
-	    selectedDates = selectedDates.filter(d => d !== date);
-	  } else {
-	    // Add the date if not selected
-	    selectedDates = [...selectedDates, date];
-	  }
-	}
+// Toggle date selection
+function toggleDate(date: string) {
+  // Ensure we're working with standardized date strings (YYYY-MM-DD)
+  const standardizedDate = new Date(date).toISOString().split('T')[0];
+  
+  // Check if the date is already selected
+  const index = selectedDates.findIndex(d => d === standardizedDate);
+  
+  if (index >= 0) {
+    // Remove the date if already selected
+    selectedDates = [...selectedDates.slice(0, index), ...selectedDates.slice(index + 1)];
+    toast.success("Date removed from schedule");
+  } else {
+    // Add the date if not selected
+    selectedDates = [...selectedDates, standardizedDate];
+    toast.success("Date added to schedule");
+  }
+}
 
   // Check if a date is selected
 	function isSelected(date: string): boolean {
-	  return selectedDates.includes(date);
+    // Standardize the input date for comparison
+    const standardizedDate = new Date(date).toISOString().split('T')[0];
+	  return selectedDates.some(d => d === standardizedDate);
 	}
 
   // Save selected dates to the database
   async function saveDates() {
     isLoading = true;
-    saveSuccess = false;
-    saveError = false;
     
     try {
       // Send the selected dates as strings (YYYY-MM-DD)
@@ -83,14 +90,16 @@
       });
       
       if (!response.ok) {
+        toast.error("Failed to save dates", {
+          description: "Please try again later or report the issue",
+        });
         throw new Error('Failed to save dates');
       }
       
-      saveSuccess = true;
-      
     } catch (error) {
-      console.error('Error saving dates:', error);
-      saveError = true;
+      toast.error("Failed to save dates", {
+        description: "Please try again later or report the issue",
+      });
     } finally {
       isLoading = false;
     }
@@ -101,11 +110,29 @@
     const mins = minutes % 60;
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
+
+  function updateIngredientAmounts() {
+    if (!originalMeal) return;
+    
+    const updatedMeal = JSON.parse(JSON.stringify(originalMeal));
+    const multiplier = portions / originalPortions;
+    
+    updatedMeal.ingredients = updatedMeal.ingredients.map(ingredient => ({
+      ...ingredient,
+      amount: parseFloat((ingredient.amount * multiplier).toFixed(2))
+    }));
+    
+    meal = updatedMeal;
+  }
+
+  $: if (portions) {
+    updateIngredientAmounts();
+  }
 </script>
 
 <Toaster />
 
-<div class="container mt-4 mx-auto">
+<div class="sm:container mt-4 mx-auto px-2 sm:px-0">
   <Card.Root class="mx-auto mb-4">
     <Card.Header>
       <div class="flex justify-between gap-2">
@@ -141,7 +168,7 @@
 							{#each dates as date}
 							<Button
 								class="flex flex-col gap-0 hover:bg-primary hover:text-accent {isSelected(date) ? 'bg-primary text-accent' : 'bg-secondary'}"
-								onclick={() => toggleDate(date)}
+                on:click={() => toggleDate(date)}
 								title={date}
 								variant="outline"
 								>
@@ -154,9 +181,9 @@
 							<Button
 								disabled={isLoading}
 								class="w-full"
-                onclick={() => {
+                on:click={() => {
                   toast.success("Plate has been scheduled", {
-                    description: `Scheduled ${selectedDates}`,
+                    description: `Scheduled ${selectedDates.length} days`,
                   });
                   saveDates();
                 }}>
@@ -169,7 +196,7 @@
           <Button variant="outline" class="content-center" href={`/plates/${meal.id}/edit`}>
             <i class='bx bx-edit-alt'></i><div class="hidden sm:block pl-1">Edit</div>
           </Button>
-          <Button variant="destructive" class="px-2 py-1" onclick={() => window.history.back()}>
+          <Button variant="destructive" class="px-2 py-1" on:click={() => window.history.back()}>
             <i class='bx bx-x text-lg'></i><div class="hidden sm:block">Close</div>
           </Button>
         </div>
@@ -179,9 +206,8 @@
       <div class="flex flex-col gap-2 rounded-lg border p-2 sticky top-0 w-full sm:w-1/3">
         <div class="text-sm font-medium w-full flex justify-center sm:justify-start">
           <div class="flex flex-row rounded-lg bg-secondary px-2 py-2 border w-fit">
-            <label for="portions" class="text-m font-medium mr-2">Portions: </label>
-            <input type="number" id="portions" name="portions" min="1" 
-              value={meal.portions || 1}
+            <label for="portions" class="text-m font-medium mr-2">Portions:</label>
+            <input type="number" id="portions" name="portions" min="1" bind:value={portions} 
               class="w-14 rounded-lg bg-secondary px-2 border text-sm font-medium" />
           </div>
         </div>

@@ -1,5 +1,4 @@
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
+// schema.prisma
 generator client {
   provider = "prisma-client-js"
 }

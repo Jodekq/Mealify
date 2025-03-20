@@ -7,10 +7,13 @@
 </script>
 
 <nav class="container pt-8 flex justify-between mx-auto">
-	<a class="text-xl content-center text-accent-foreground" href="/">Plate Pilot</a>
+	<div class="flex sm:flex-row flex-col">
+		<a class="text-xl content-center text-accent-foreground font-bold" href="/">Plate Pilot</a>
+		<div class="text-[10px]">Early Access</div>
+	</div>
 	<div>
-		<Button class="px-2 sm:px-4" href="/saved_plates" variant="link">Saved Plates</Button>
-		<Button class="px-2 sm:px-4" href="/add_plate" variant="link">Add Plate</Button>
+		<Button class="px-2 sm:px-4 font-bold" href="/saved_plates" variant="link">Saved Plates</Button>
+		<Button class="px-2 sm:px-4 font-bold" href="/add_plate" variant="link">Add Plate</Button>
 	</div>
 	{#if data.user}
 		<form action="/?/logout" method="post" use:enhance>

@@ -3,6 +3,9 @@
 	import Heading from './heading.svelte';
 	import Footer from './footer.svelte';
 
+	import '@fontsource-variable/montserrat';
+	import '@fontsource-variable/nunito';
+
 	export let data;
 </script>
 

@@ -1,46 +1,31 @@
 <script lang="ts">
+	import { Button } from "$lib/components/ui/button";
+	import * as Popover from "$lib/components/ui/popover";
 </script>
 
 <div class="container mt-32 mx-auto">
-	<hr />
-
-	<footer class="py-8">
-		<nav class="flex space-x-32">
-			<ol class="space-y-4">
-				<li>
-					<a class="unstyled muted" href="/">Home</a>
-				</li>
-				<li>
-					<a class="unstyled muted" href="/about">About</a>
-				</li>
-				<li>
-					<a class="unstyled muted" href="/newsletter">Newsletter</a>
-				</li>
-				<li>
-					<a class="unstyled muted" href="/rss.xml">RSS</a>
-				</li>
-			</ol>
-
-			<ol class="space-y-4">
-				<li>
-					<a class="unstyled muted" href="https://twitter.com/joyofcodedev">
-						Twitter
-					</a>
-				</li>
-				<li>
-					<a
-						class="unstyled muted"
-						href="https://www.youtube.com/@joyofcodedev"
-					>
-						YouTube
-					</a>
-				</li>
-				<li>
-					<a class="unstyled muted" href="https://github.com/mattcroat">
-						GitHub
-					</a>
-				</li>
-			</ol>
+	<footer class="py-8 flex justify-center">
+		<nav class="flex flex-col gap-4">
+			<div class="text-xl font-bold">Plate Pilot</div>
+			<div class="flex gap-20">
+				<div>Manage what you eat.</div>
+				<div class="flex flex-col gap-2">
+					<div>CONNECT</div>
+					<Popover.Root>
+						<Popover.Trigger>Contact me</Popover.Trigger>
+						<Popover.Content class="flex-col gap-2">
+							<div class="flex gap-1">
+								<div>Add</div>
+								<div class="font-bold">@jodek</div>
+								<div>on discord</div>
+							</div>
+							<a href="https://discord.com/users/Jodek" target="_blank">or click here</a>
+						</Popover.Content> 
+					</Popover.Root>
+					<a href="https://github.com/Jodekq/PlatePilot" target="_blank">Github</a>
+				</div>
+			</div>
+			<div>Made with &lt3 by @jodek</div>
 		</nav>
 	</footer>
 </div>

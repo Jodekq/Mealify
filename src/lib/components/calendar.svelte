@@ -3,6 +3,7 @@
   import { addDays, format } from "date-fns";
   import * as Card from "$lib/components/ui/card";
   import { Button } from "$lib/components/ui/button/index.js";
+  import { Skeleton } from "$lib/components/ui/skeleton";
 
   let meals: Record<string, Array<{ name: string; totalTime: number, id: string }>> = {};
 
@@ -30,22 +31,26 @@
 <div class="font-bold text-2xl content-center flex justify-center">Calendar</div>
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-4">
   {#each days as { date, formatted }}
-  <Card.Root class="p-2 {formatted === format(today, 'yyyy-MM-dd') ? 'border-accent' : 'border-secondary'}">
+  <Card.Root class="p-2 min-h-[105.95px] {formatted === format(today, 'yyyy-MM-dd') ? 'border-accent' : 'border-secondary'}">
     <Card.Header class="px-2 py-2 pb-0">
       <Card.Title class="text-sm sm:text-base">{format(date, "MMM dd")}</Card.Title>
     </Card.Header>
     <Card.Content class="px-2 py-2 flex flex-col gap-1">
-      {#if meals[formatted] && meals[formatted].length > 0}
-        {#each meals[formatted] as meal}
-        <Button variant="outline" href={`/plates/${meal.id}`}>
-          <div class="text-xs sm:text-sm flex gap-1">
-            <div>{meal.name}</div>
-            <div class="text-[10px] sm:text-xs">{meal.totalTime} min</div>
-          </div>
-        </Button>
-        {/each}
+      {#if meals[formatted] }
+        {#if meals[formatted] && meals[formatted].length > 0}
+          {#each meals[formatted] as meal}
+          <Button variant="outline" href={`/plates/${meal.id}`}>
+            <div class="text-xs sm:text-sm flex gap-1">
+              <div>{meal.name}</div>
+              <div class="text-[10px] sm:text-xs">{meal.totalTime} min</div>
+            </div>
+          </Button>
+          {/each}
+        {:else}
+          <div class="text-[10px] sm:text-xs">No meal planned</div>
+        {/if}
       {:else}
-        <div class="text-[10px] sm:text-xs">No meal planned</div>
+      <Skeleton class="h-[40px] w-full rounded-lg" />
       {/if}
     </Card.Content>
   </Card.Root>

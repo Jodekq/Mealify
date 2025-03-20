@@ -13,7 +13,8 @@ export async function GET({ locals }) {
     let now = new Date();
     let today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
-    const scheduledMeal = await prisma.mealSchedule.findFirst({
+    // Fetch all scheduled meals for today
+    const scheduledMeals = await prisma.mealSchedule.findMany({
       where: {
         user_id: userId,
         date: {
@@ -34,14 +35,14 @@ export async function GET({ locals }) {
       },
     });
 
-    if (!scheduledMeal) {
-      console.warn(`No scheduled meal found for user ${userId} on ${today.toISOString()}`);
-      return json({ meal: null });
+    if (!scheduledMeals || scheduledMeals.length === 0) {
+      console.warn(`No meals found for user ${userId} on ${today.toISOString()}`);
+      return json({ meals: [] });
     }
 
-    return json({ meal: scheduledMeal.meal });
+    return json({ meals: scheduledMeals.map(mealSchedule => mealSchedule.meal) });
   } catch (error) {
-    console.error("Error fetching scheduled meal:", error);
+    console.error("Error fetching scheduled meals:", error);
     return json({ error: "Internal server error" }, { status: 500 });
   }
 }

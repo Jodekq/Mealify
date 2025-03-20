@@ -20,9 +20,7 @@
   let restTime = 0;
   let isSubmitting = false;
   let errorMessage = '';
-  let successMessage = '';
   let mealId = '';
-  let selectedUnit = '';
 
   export let data: { meal?: Meal } = {};
   const meal = data.meal ?? null;
@@ -143,7 +141,7 @@ async function handleSubmit() {
   }
 </script>
 
-<div class="mt-4 mx-auto px-2 sm:container">
+<div class="sm:container mt-4 mx-auto px-2 sm:px-0">
   <Card.Root class="mx-auto mb-4">
     <Card.Content class="flex gap-4">
       <form on:submit|preventDefault={handleSubmit} class="space-y-4 w-full flex flex-col">
@@ -232,8 +230,8 @@ async function handleSubmit() {
           <div class="text-lg font-medium pb-2">Description</div>
           <Button variant="outline" class="content-center mb-4" type="button" onclick={addStep}><i class='bx bx-plus'></i> Add Step</Button>
             {#each steps as step (step.id)}
-              <div class="shadow-md space-y-2 flex flex-col sm:flex-row gap-4 p-2 mb-2">
-                <div class="sm:w-1/3 w-full flex flex-col gap-3">
+              <div class="shadow-md space-y-2 flex flex-col sm:flex-row gap-4 mb-2">
+                <div class="sm:w-1/3 w-full flex flex-col gap-2">
                   <div class="text-m font-medium pl-1">Step {step.number}</div>
                   <div>
                     <Label class="pl-1" for={`step_text-${step.id}`}>Step Text</Label>
