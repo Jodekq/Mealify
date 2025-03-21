@@ -1,3 +1,4 @@
+<!-- src/routes/add_plate/+page.svelte -->
 <script lang="ts">
   import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button/index.js";
@@ -21,7 +22,6 @@
     try {
       isSubmitting = true;
       
-      // Validate form
       if (!name) {
         toast.error('Please enter a meal name');
         isSubmitting = false;
@@ -59,6 +59,7 @@
       
       if (response.ok) {
         toast.success('Meal saved successfully');
+        window.location.href = "/saved_plates";
       } else {
         toast.error(errorMessage);
       }
@@ -80,7 +81,6 @@
     ingredients = ingredients.filter(ingredient => ingredient.id !== id);
   }
 
-  // Function to handle unit selection
   function selectUnit(ingredientId, selectedUnit) {
     ingredients = ingredients.map(ingredient => 
       ingredient.id === ingredientId 
@@ -104,6 +104,7 @@
 </script>
 
 <div class="mt-4 mx-auto px-2 sm:container">
+  <div class="text-2xl font-bold mb-4 text-center">Add Plate</div>
   <Card.Root class="mx-auto mb-4">
     <Card.Content class="flex gap-4">
       <form on:submit|preventDefault={handleSubmit} class="space-y-4 w-full flex flex-col">

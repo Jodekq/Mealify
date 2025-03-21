@@ -1,49 +1,73 @@
 //src/lib/types.ts
+export type User = {
+  id: string;
+  username: string;
+  meals: Meal[];
+  schedule: MealSchedule[];
+  sharedMeals: SharedMeal[];
+};
+
 export type Ingredient = {
   id: string;
   name: string;
   unit: string;
+  meals?: MealIngredient[];
 };
 
 export type MealIngredient = {
   id: string;
-  ingredient: Ingredient; 
+  meal_id: string;
+  ingredient_id: string;
+  ingredient: Ingredient;
   amount: number;
-  unit: string;
-  name: string;
 };
 
 export type MealStep = {
   id: string;
-  stepNumber: number; 
+  meal_id: string;
+  stepNumber: number;
   text: string;
-  extraText?: string; 
-  description?: string; 
+  extraText?: string;
+  description?: string;
 };
 
 export type Meal = {
   id: string;
+  user_id: string;
   name: string;
-  ingredients: MealIngredient[];
-  steps?: MealStep[];
   workingTime: number;
   cookingTime: number;
   restTime: number;
   totalTime: number;
   portions: number;
-  mealSchedules?: MealSchedule[];
+  ingredients: MealIngredient[];
+  steps?: MealStep[];
+  schedule?: MealSchedule[];
+  sharedMeals?: SharedMeal[];
   scheduledDates?: ScheduledDate[];
 };
 
 export type MealSchedule = {
   id: string;
+  user_id: string;
+  meal_id: string;
   date: string;
   meal: Meal | null;
 };
 
+export type SharedMeal = {
+  id: string;
+  meal_id: string;
+  creator_id: string;
+  meal: Meal;
+  creator: User;
+  shared_at: string;
+  expires_at?: string;
+};
+
 export type RollingCalendar = {
-  startDate: string; // First day in the rolling view
-  days: MealSchedule[]; // Array of 20 days with meal info
+  startDate: string;
+  days: MealSchedule[];
 };
 
 export type ScheduledDate = {

@@ -57,3 +57,10 @@
     font-family: 'Nunito Variable', sans-serif;
   }
 }
+
+
+@property --border-angle {
+  inherits: false;
+  initial-value: 0deg;
+  syntax: '<angle>';
+}

@@ -1,8 +1,8 @@
+// src/routes/api/meals/+server.ts
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import prisma from '$lib/prismaClient';
 
-// GET all meals for a user
 export async function GET({ locals }) {
   try {
     const userId = locals.user?.id;
@@ -43,7 +43,6 @@ export async function GET({ locals }) {
   }
 }
 
-// POST create a new meal
 export const POST: RequestHandler = async ({ request, locals }) => {
   try {
     const userId = locals.user?.id;
@@ -64,10 +63,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       steps 
     } = data;
     
-    // Calculate total time
     const totalTime = (workingTime || 0) + (cookingTime || 0) + (restTime || 0);
     
-    // Create or update the meal
     const meal = await prisma.meal.create({
       data: {
         name,
@@ -82,10 +79,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       }
     });
     
-    // Process ingredients
     if (ingredients && ingredients.length > 0) {
       for (const ing of ingredients) {
-        // First, find or create the ingredient
         let ingredient = await prisma.ingredient.findUnique({
           where: { name: ing.name }
         });
@@ -99,7 +94,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
           });
         }
         
-        // Then create the meal ingredient association
         await prisma.mealIngredient.create({
           data: {
             meal: {
@@ -114,7 +108,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       }
     }
     
-    // Process steps
     if (steps && steps.length > 0) {
       for (const step of steps) {
         await prisma.mealStep.create({

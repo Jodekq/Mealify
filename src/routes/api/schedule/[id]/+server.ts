@@ -1,10 +1,10 @@
+// src/routes/api/schedule/[id]/+server.ts
 import { error, json } from '@sveltejs/kit';
 import prisma from '$lib/prismaClient';
 import type { RequestEvent } from '@sveltejs/kit';
 
-// Explicitly type the request handler with params
 export async function POST({ params, request, locals }: RequestEvent) {
-  const mealId = params.id; // This should now be properly typed
+  const mealId = params.id;
   const userId = locals.user?.id;
   
   if (!userId) {
@@ -16,7 +16,6 @@ export async function POST({ params, request, locals }: RequestEvent) {
       throw error(400, 'Meal ID is required');
     }
     
-    // Verify the meal belongs to the user
     const meal = await prisma.meal.findUnique({
       where: {
         id: mealId,
@@ -28,7 +27,6 @@ export async function POST({ params, request, locals }: RequestEvent) {
       throw error(404, 'Meal not found');
     }
     
-    // Get dates from request body
     const { dates } = await request.json();
     
     if (!Array.isArray(dates)) {
@@ -45,12 +43,11 @@ export async function POST({ params, request, locals }: RequestEvent) {
         user_id: userId,
         meal_id: mealId,
         date: {
-          lt: today // Delete any date less than today
+          lt: today 
         }
       }
     });
     
-    // Delete existing schedules for this meal
     await prisma.mealSchedule.deleteMany({
       where: {
         meal_id: mealId,
@@ -58,7 +55,6 @@ export async function POST({ params, request, locals }: RequestEvent) {
       }
     });
     
-    // Create new schedule entries
     if (dates.length > 0) {
       const scheduleData = dates.map(dateStr => ({
         user_id: userId,

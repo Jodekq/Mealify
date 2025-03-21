@@ -1,3 +1,4 @@
+// src/routes/auth/login/+page.server.ts
 import prisma from '$lib/prismaClient';
 import { lucia } from "$lib/server/auth";
 import { fail, redirect, type Actions } from "@sveltejs/kit";

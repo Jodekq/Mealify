@@ -1,3 +1,4 @@
+// src/routes/api/schedule/+server.ts
 import { error, json } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
 import { format, addDays } from "date-fns";
@@ -13,7 +14,7 @@ export async function GET({ locals }) {
     let now = new Date();
     let today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
-    const endDate = addDays(today, 20); // 20 days from today
+    const endDate = addDays(today, 20); 
 
     const mealSchedules = await prisma.mealSchedule.findMany({
       where: {
@@ -34,17 +35,14 @@ export async function GET({ locals }) {
       },
     });
 
-    // Group meal schedules by date
     const mealsMap: Record<string, Array<{ name: string; totalTime: number, id: string }>> = {};
     
-    // Initialize all dates with empty arrays
     for (let i = 0; i < 20; i++) {
       const date = addDays(today, i);
       const dateKey = format(date, "yyyy-MM-dd");
       mealsMap[dateKey] = [];
     }
     
-    // Add all meals to their respective dates
     mealSchedules.forEach((schedule) => {
       const dateKey = format(schedule.date, "yyyy-MM-dd");
       if (schedule.meal) {
@@ -104,12 +102,11 @@ export async function POST({ params, request, locals }: RequestEvent) {
         user_id: userId,
         meal_id: mealId,
         date: {
-          lt: today // Delete any date less than today
+          lt: today
         }
       }
     });
     
-    // Delete existing schedules for this meal
     await prisma.mealSchedule.deleteMany({
       where: {
         meal_id: mealId,
@@ -117,7 +114,6 @@ export async function POST({ params, request, locals }: RequestEvent) {
       }
     });
     
-    // Create new schedule entries
     if (dates.length > 0) {
       const scheduleData = dates.map(dateStr => ({
         user_id: userId,

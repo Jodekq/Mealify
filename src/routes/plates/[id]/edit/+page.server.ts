@@ -1,3 +1,4 @@
+// src/routes/plates/[id]/edit/+page.server.ts
 import { error } from '@sveltejs/kit';
 import prisma from '$lib/prismaClient';
 import type { PageServerLoad } from './$types';

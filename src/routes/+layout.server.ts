@@ -1,3 +1,4 @@
+// src/routes/+layout.server.ts
 import { lucia } from "$lib/server/auth";
 import prisma from '$lib/prismaClient';
 

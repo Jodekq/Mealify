@@ -1,8 +1,8 @@
+// src/routes/api/meals/[id]/+server.ts
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import prisma from '$lib/prismaClient';
 
-// GET a single meal
 export const GET: RequestHandler = async ({ params, locals }) => {
     const userId = locals.user?.id;
     if (!userId) return json({ error: 'Unauthorized' }, { status: 401 });

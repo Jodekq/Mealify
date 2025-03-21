@@ -1,3 +1,4 @@
+// src/routes/+page.server.ts
 import { lucia } from "$lib/server/auth";
 import { fail, redirect } from "@sveltejs/kit";
 

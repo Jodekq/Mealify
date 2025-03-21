@@ -1,3 +1,4 @@
+// src/routes/plates/[id]/+page.server.ts
 import { error } from '@sveltejs/kit';
 import prisma from '$lib/prismaClient';
 import type { PageServerLoad } from './$types';
@@ -47,17 +48,22 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       throw error(404, 'Meal not found');
     }
     
-    // Map schedule to scheduledDates for consistency with your types
-    const mealWithScheduledDates = {
+    // Transform the meal data to match component expectations
+    const transformedMeal = {
       ...meal,
+      // Convert schedule to scheduledDates
       scheduledDates: meal.schedule?.map(schedule => ({
         id: schedule.id,
         date: schedule.date.toISOString().split('T')[0] // Format date as YYYY-MM-DD
       }))
     };
     
+    // Remove the schedule property if you don't need it in the component
+    // This would solve the type issue
+    // delete transformedMeal.schedule;
+    
     return {
-      meal: mealWithScheduledDates
+      meal: transformedMeal
     };
   } catch (e) {
     console.error('Error loading meal:', e);

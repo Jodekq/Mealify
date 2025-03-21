@@ -1,3 +1,4 @@
+<!-- src/routes/plates/[id]/edit/+page.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import { Button } from "$lib/components/ui/button/index.js";
@@ -6,7 +7,6 @@
   import { Label } from "$lib/components/ui/label/index.js";
   import * as Select from "$lib/components/ui/select";
   import { Textarea } from "$lib/components/ui/textarea/index.js";
-  import { Toaster } from "$lib/components/ui/sonner";
   import { toast } from "svelte-sonner";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { buttonVariants } from "$lib/components/ui/button/index.js";
@@ -110,6 +110,7 @@ async function handleSubmit() {
 
   function deleteMeal() {
     fetch(`/api/meals/${mealId}`, { method: 'DELETE' });
+    window.location.href = "/saved_plates";
     toast.success('Meal deleted successfully!');
   }
 
@@ -172,7 +173,7 @@ async function handleSubmit() {
                 </AlertDialog.Header>
                 <AlertDialog.Footer>
                   <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-                  <AlertDialog.Action class={buttonVariants({ variant: "destructive" })} onclick={deleteMeal}>Continue</AlertDialog.Action>
+                  <AlertDialog.Action class={buttonVariants({ variant: "destructive" })} onclick={deleteMeal}>Delete</AlertDialog.Action>
                 </AlertDialog.Footer>
               </AlertDialog.Content>
             </AlertDialog.Root>

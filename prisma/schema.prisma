@@ -17,8 +17,9 @@ model User {
 
   meals    Meal[]    @relation("UserMeals")
   schedule MealSchedule[]
+  createdShares SharedMeal[] @relation("CreatorToSharedMeal")
 
-  username String @unique @db.VarChar(255)
+  username String @unique
   password String
 
   @@map("user")
@@ -56,6 +57,9 @@ model Meal {
   ingredients MealIngredient[]
   steps       MealStep[]
   schedule    MealSchedule[]
+  sharedMeals SharedMeal[] @relation("MealToSharedMeal")
+
+  @@index([user_id])
 }
 
 model MealIngredient {
@@ -65,6 +69,9 @@ model MealIngredient {
   ingredient   Ingredient  @relation(fields: [ingredient_id], references: [id], onDelete: Cascade)
   ingredient_id String
   amount       Float
+
+  @@index([meal_id])
+  @@index([ingredient_id])
 }
 
 model Ingredient {
@@ -82,6 +89,8 @@ model MealStep {
   text      String
   extraText String?
   description String?
+
+  @@index([meal_id])
 }
 
 model MealSchedule {
@@ -91,4 +100,22 @@ model MealSchedule {
   meal    Meal    @relation(fields: [meal_id], references: [id], onDelete: Cascade)
   meal_id String
   date    DateTime
+
+  @@index([user_id])
+  @@index([meal_id])
+}
+
+model SharedMeal {
+  id         String   @id @unique @default(uuid())
+  creator    User     @relation("CreatorToSharedMeal", fields: [creator_id], references: [id], onDelete: Cascade)
+  creator_id String
+  meal       Meal     @relation("MealToSharedMeal", fields: [meal_id], references: [id], onDelete: Cascade)
+  meal_id    String
+  shareCode  String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([creator_id])
+  @@index([meal_id])
+  @@index([shareCode])
 }

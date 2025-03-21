@@ -2,8 +2,8 @@
   import { Progress } from "$lib/components/ui/progress";
 
   let upcomingFeatures = [
-    { title: "Meal Sharing", description: "Easily share your meals with friends", progress: 30 },
-    { title: "ToBuy List", description: "Keep track of what you need to buy", progress: 5 },
+    { title: "Meal Sharing", description: "Easily share your meals with friends", progress: 100 },
+    { title: "ToBuy List", description: "Keep track of what you need to buy", progress: 30 },
     { title: "Families", description: "Organize meals for your family", progress: 0 },
   ];
 </script>

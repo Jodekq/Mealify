@@ -14,6 +14,7 @@
 	<div>
 		<Button class="px-2 sm:px-4 font-bold" href="/saved_plates" variant="link">Saved Plates</Button>
 		<Button class="px-2 sm:px-4 font-bold" href="/add_plate" variant="link">Add Plate</Button>
+		<Button class="px-2 sm:px-4 font-bold" href="/my_shares" variant="link">My Shares</Button>
 	</div>
 	{#if data.user}
 		<form action="/?/logout" method="post" use:enhance>

@@ -1,3 +1,4 @@
+<!-- src/routes/saved_plates/+page.svelte -->
 <script lang="ts">
   import { onMount } from "svelte";
 	import { Button } from "$lib/components/ui/button/index.js";
@@ -27,7 +28,8 @@
   }
 </script>
 
-<div class="container mt-4 mx-auto">
+<div class="mt-4 mx-auto px-2 sm:container">
+  <div class="text-2xl font-bold mb-4 text-center">Saved Plates</div>
   <div class="flex justify-between pb-4">
     <Button>Filter</Button>
     <Button onclick={toggleLayout}>{isGridLayout ? 'List' : 'Grid'}</Button>

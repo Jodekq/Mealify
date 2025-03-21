@@ -1,3 +1,4 @@
+// src/routes/api/meals/today/+server.ts
 import { json } from "@sveltejs/kit";
 import prisma from '$lib/prismaClient';
 
@@ -11,7 +12,6 @@ export async function GET({ locals }) {
     let now = new Date();
     let today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
-    // Fetch all scheduled meals for today
     const scheduledMeals = await prisma.mealSchedule.findMany({
       where: {
         user_id: userId,
