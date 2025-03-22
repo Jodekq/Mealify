@@ -5,6 +5,7 @@
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
   import { ScrollArea } from "$lib/components/ui/scroll-area/index.js";
   import * as Popover from "$lib/components/ui/popover";
+  import { Toaster } from "$lib/components/ui/sonner";
   import { toast } from "svelte-sonner";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
@@ -113,11 +114,9 @@
     const index = selectedDates.findIndex(d => d === standardizedDate);
     
     if (index >= 0) {
-      // Remove date
       selectedDates = [...selectedDates.slice(0, index), ...selectedDates.slice(index + 1)];
       toast.success("Date removed from schedule");
     } else {
-      // Add date
       selectedDates = [...selectedDates, standardizedDate];
       toast.success("Date added to schedule");
     }
@@ -211,7 +210,7 @@
 
   function handlePortionChange(mealId, newPortions) {
     portionsMap[mealId] = newPortions;
-    portionsMap = {...portionsMap}; // Force reactivity update
+    portionsMap = {...portionsMap};
     
     if (meal && meal.id === mealId) {
       meal = updateIngredientAmounts(meal);
@@ -259,10 +258,12 @@
   }
 </script>
 
+<Toaster />
+
 {#if meal}
   <!-- Single meal display -->
   <Card.Root class="mx-auto mb-4">
-    <Card.Header class="p-2 sm:p-6">
+    <Card.Header class="p-2 pb-0 sm:p-6 sm:pb-0">
       <div class="flex gap-2 justify-between">
         <div class="flex gap-2">
           <Card.Title class="content-center">{meal.name}</Card.Title>
@@ -311,10 +312,10 @@
           </Popover.Content>
         </Popover.Root>
         <div class="flex gap-2">
-          <Button variant="outline" class="content-center flex gap-1 hidden sm:block" on:click={() => shareMeal(meal.id)}>
+          <Button variant="outline" class="content-center sm:flex gap-1 hidden" on:click={() => shareMeal(meal.id)}>
             <i class='bx bx-share'></i><div class="pl-1">Share</div>
           </Button>
-          <Button variant="outline" class="content-center flex gap-1 hidden sm:block" href={`/plates/${meal.id}/edit`}>
+          <Button variant="outline" class="content-center sm:flex gap-1 hidden" href={`/plates/${meal.id}/edit`}>
             <i class='bx bx-edit-alt'></i><div class="pl-1">Edit</div>
           </Button>
           <Button variant="destructive" class="px-3 py-2 flex gap-1" on:click={() => window.history.back()}>
@@ -384,7 +385,7 @@
   <!-- Multiple meals display -->
   {#each (todaysMeals.length > 0 ? todaysMeals : meals) as currentMeal (currentMeal.id)}
     <Card.Root class="mx-auto mb-4">
-      <Card.Header class="p-2 sm:p-6">
+      <Card.Header class="p-2 pb-0 sm:p-6 sm:pb-0">
         <div class="flex gap-2 flex-wrap sm:justify-between">
           <div class="flex gap-2">
             <Card.Title class="content-center">{currentMeal.name}</Card.Title>

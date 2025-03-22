@@ -10,6 +10,7 @@
   import { toast } from "svelte-sonner";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { buttonVariants } from "$lib/components/ui/button/index.js";
+  import { startLoading, updateProgress, completeLoading } from '$lib/stores/loadingStore';
 
   import type { Meal } from "$lib/types";
 
@@ -33,7 +34,6 @@
     try {
       const res = await fetch(`/api/meals/${meal.id}`);
       const data = await res.json();
-      // Initialize form fields with meal data
       name = meal.name || '';
       portions = meal.portions || 1;
       workingTime = meal.workingTime || 0;
@@ -41,7 +41,6 @@
       restTime = meal.restTime || 0;
       mealId = meal.id;
       
-      // Initialize ingredients
       ingredients = meal.ingredients ? meal.ingredients.map(ing => ({
         id: ing.ingredient.id,
         name: ing.ingredient.name,
@@ -49,7 +48,6 @@
         amount: ing.amount
       })) : [];
 
-      // Initialize steps
       steps = meal.steps ? meal.steps.map(step => ({
         id: step.id,
         number: step.stepNumber,
@@ -85,6 +83,9 @@ async function handleSubmit() {
       }))
     };
 
+    startLoading();
+    updateProgress(30);
+
     try {
       const response = await fetch(`/api/meals/${mealId}`, {
         method: 'PUT',
@@ -95,6 +96,7 @@ async function handleSubmit() {
       });
 
       if (response.ok) {
+        completeLoading();
         toast.success('Meal updated successfully!');
         const updatedData = await response.json();
       } else {
@@ -142,7 +144,7 @@ async function handleSubmit() {
   }
 </script>
 
-<div class="sm:container mt-4 mx-auto px-2 sm:px-0">
+<div class="sm:container mt-4 mx-auto px-2">
   <Card.Root class="mx-auto mb-4">
     <Card.Content class="flex gap-4">
       <form on:submit|preventDefault={handleSubmit} class="space-y-4 w-full flex flex-col">

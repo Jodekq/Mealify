@@ -6,6 +6,7 @@
   import { Skeleton } from "$lib/components/ui/skeleton";
   import { toast } from "svelte-sonner";
   import { Toaster } from "$lib/components/ui/sonner";
+  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
 
   type SharedMeal = {
     id: string;
@@ -22,6 +23,8 @@
 
   let sharedMeals: SharedMeal[] = [];
   let isLoading = true;
+  let mealToDelete: SharedMeal | null = null;
+  let isDeleting = false;
 
   onMount(async () => {
     try {
@@ -52,12 +55,61 @@
       console.error("Error copying to clipboard:", error);
     }
   }
+
+  async function deleteShare() {
+    if (!mealToDelete) return;
+    
+    isDeleting = true;
+    
+    try {
+      const response = await fetch(`/api/shares/${mealToDelete.id}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete share');
+      }
+      
+      sharedMeals = sharedMeals.filter(share => share.id !== mealToDelete.id);
+      
+      toast.success("Share link copied to clipboard!", {
+        description: "You can now share this with your friends."
+      });
+      mealToDelete = null;
+    } catch (error) {
+      console.error("Error deleting shared meal:", error);
+      toast.error("Failed to delete share link");
+    } finally {
+      isDeleting = false;
+    }
+  }
+
+  function confirmDelete(share: SharedMeal) {
+    mealToDelete = share;
+  }
 </script>
 
 <Toaster />
 
+<AlertDialog.Root open={!!mealToDelete}>
+  <AlertDialog.Content>
+    <AlertDialog.Header>
+      <AlertDialog.Title>Delete Share Link</AlertDialog.Title>
+      <AlertDialog.Description>
+        Are you sure you want to delete this share link? This will permanently remove access for anyone who has this link.
+      </AlertDialog.Description>
+    </AlertDialog.Header>
+    <AlertDialog.Footer>
+      <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+      <AlertDialog.Action onclick={deleteShare} disabled={isDeleting}>
+        {isDeleting ? 'Deleting...' : 'Delete'}
+      </AlertDialog.Action>
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog.Root>
+
 <div class="container mt-4 mx-auto">
-  <div class="text-2xl font-bold mb-4 text-center">My Shared Meals</div>
+  <div class="text-2xl font-bold mb-4 text-center">My Shared Plates</div>
   
   {#if isLoading}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -92,14 +144,19 @@
               <div class="flex justify-between">
                 <span>Expires: {share.expiresAt ? new Date(share.expiresAt).toLocaleDateString() : 'Never'}</span>
               </div>
-              <Button on:click={(e) => copyShareLink(share.shareCode, e)} variant="outline" class="w-full">
+              <Button onclick={(e) => copyShareLink(share.shareCode, e)} variant="outline" class="w-full">
                 <i class='bx bx-copy mr-2'></i> Copy Share Link
               </Button>
-              <a href={`/shared/${share.shareCode}`} target="_blank" class="w-full">
-                <Button variant="link" class="w-full">
-                  <i class='bx bx-link-external mr-2'></i> View Shared Page
+              <div class="grid grid-cols-2 gap-2">
+                <a href={`/shared/${share.shareCode}`} target="_blank" class="w-full">
+                  <Button variant="ghost" class="w-full">
+                    <i class='bx bx-link-external mr-2'></i> View
+                  </Button>
+                </a>
+                <Button variant="destructive" onclick={() => confirmDelete(share)} class="w-full">
+                  <i class='bx bx-trash mr-2'></i> Delete
                 </Button>
-              </a>
+              </div>
             </div>
           </Card.Content>
         </Card.Root>

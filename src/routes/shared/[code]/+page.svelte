@@ -98,14 +98,14 @@
 <div class="mt-4 mx-auto px-2 sm:container">
   {#if meal}
     <Card.Root class="mx-auto mb-4">
-      <Card.Header>
+      <Card.Header class="p-2 pb-0 sm:p-6 sm:pb-0">
         <div class="flex flex-col sm:flex-row justify-between gap-2">
           <div class="flex flex-row gap-4">
             <Card.Title class="content-center">{meal.name}</Card.Title>
             <DropdownMenu.Root>
-              <DropdownMenu.Trigger class="rounded-lg border px-3 text-sm font-medium flex">
-                <i class='bx bx-info-circle content-center'></i>
-                <div class="content-center"><div class="hidden sm:block pl-2">Time</div></div>
+              <DropdownMenu.Trigger class="rounded-lg border px-3 text-sm font-medium flex items-center h-10">
+                <i class='bx bx-info-circle'></i>
+                <div class="hidden sm:block pl-2">Time</div>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content>
                 <DropdownMenu.Group>
@@ -190,7 +190,7 @@
   <meta property="og:url" content={`https://platepilot.dev/shared/${data.shareCode}`} />
   <meta property="og:title" content="{meal.name} | Plate Pilot" />
   <meta property="og:description" content="A recipe for {meal.name} shared by {creatorUsername}." />
-  <meta property="og:image" content={`https://platepilot.dev/api/og/shared/${data.shareCode}`} />
+  <meta property="og:image" content={`https://platepilot.dev/shared/${data.shareCode}`} />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   
@@ -198,7 +198,7 @@
   <meta property="twitter:url" content={`https://platepilot.dev/shared/${data.shareCode}`} />
   <meta property="twitter:title" content="{meal.name} | Plate Pilot" />
   <meta property="twitter:description" content="A recipe for {meal.name} shared by {creatorUsername}." />
-  <meta property="twitter:image" content={`https://platepilot.dev/api/og/shared/${data.shareCode}`} />
+  <meta property="twitter:image" content={`https://platepilot.dev/shared/${data.shareCode}`} />
   
   <meta name="theme-color" content="#22c55e" />
 {/if}
