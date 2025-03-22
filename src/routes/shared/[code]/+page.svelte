@@ -29,10 +29,25 @@
   
   let meal = data.meal;
   let portions = meal?.portions || 1; 
-  let creatorUsername = data.creator?.username || "Another cook";
+  let creatorUsername = data.creator?.username || "Unknown";
   let isAuthenticated = data.user !== null;
   let isImporting = false;
   let isCreator = data.user?.id === data.creator?.id;
+
+  let ogDescription = "";
+  
+  if (meal) {
+    const ingredientList = meal.ingredients
+      .slice(0, 3)
+      .map(ing => `${ing.amount} ${ing.ingredient.unit} ${ing.ingredient.name}`)
+      .join(", ");
+      
+    const extraIngredients = meal.ingredients.length > 3 
+      ? ` and ${meal.ingredients.length - 3} more ingredients` 
+      : "";
+      
+    ogDescription = `A recipe for ${meal.name} with ${ingredientList}${extraIngredients}. Shared by ${creatorUsername}.`;
+  }
 
   const formatTime = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
@@ -110,7 +125,7 @@
             </div>
             {#if !isCreator}
               <Button onclick={importMeal} disabled={isImporting} variant="default">
-                {isImporting ? 'Importing...' : 'Import to My Plates'}
+                {isImporting ? 'Importing...' : 'Import'}
               </Button>
             {/if}
           </div>
@@ -165,3 +180,27 @@
     </div>
   {/if}
 </div>
+
+<svelte:head>
+  {#if meal}
+    <title>{meal.name} | Plate Pilot</title>
+    <meta name="description" content={ogDescription} />
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={`${import.meta.env.VITE_APP_URL || ''}/shared/${data.shareCode}`} />
+    <meta property="og:title" content={`${meal.name} | Plate Pilot`} />
+    <meta property="og:description" content={ogDescription} />
+    
+    <meta property="og:image" content={`${import.meta.env.VITE_APP_URL || ''}/api/og/shared/${data.shareCode}`} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={`${import.meta.env.VITE_APP_URL || ''}/shared/${data.shareCode}`} />
+    <meta property="twitter:title" content={`${meal.name} | Plate Pilot`} />
+    <meta property="twitter:description" content={ogDescription} />
+    <meta property="twitter:image" content={`${import.meta.env.VITE_APP_URL || ''}/api/og/shared/${data.shareCode}`} />
+    
+    <meta name="theme-color" content="#FF9500" />
+  {/if}
+</svelte:head>

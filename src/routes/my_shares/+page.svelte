@@ -61,9 +61,21 @@
   
   {#if isLoading}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <Skeleton class="h-[150px] w-full rounded-lg border" />
-      <Skeleton class="h-[150px] w-full rounded-lg border" />
-      <Skeleton class="h-[150px] w-full rounded-lg border" />
+      <Card.Root>
+        <Card.Header>
+          <Skeleton class="h-6 w-40 rounded-lg" />
+          <Skeleton class="h-4 w-32 rounded-lg" />
+        </Card.Header>
+        <Card.Content>
+          <div class="flex flex-col gap-2">
+            <div class="flex justify-between">
+              <Skeleton class="h-4 w-36 rounded-lg" />
+            </div>
+            <Skeleton class="h-10 w-full rounded-lg" />
+            <Skeleton class="h-10 w-full rounded-lg" />
+          </div>
+        </Card.Content>
+      </Card.Root>
     </div>
   {:else if sharedMeals.length > 0}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -82,12 +82,31 @@
   {:else}
     {#if isGridLayout}
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 h-fit">
-        <Skeleton class="h-[121.79px] w-[339.65px] rounded-lg border" />
+        <Card.Root>
+          <Card.Header>
+            <Skeleton class="h-6 w-48 rounded-lg" />
+          </Card.Header>
+          <Card.Content>
+            <div class="flex gap-5 items-center">
+              <Skeleton class="h-5 w-32 rounded-lg" />
+              <Skeleton class="h-5 w-24 rounded-lg" />
+            </div>
+          </Card.Content>
+        </Card.Root>
       </div>
     {:else}
-      <!-- List Layout -->
       <div class="space-y-4">
-        <Skeleton class="h-[121.79px] w-[full] rounded-lg border" />
+        <Card.Root>
+          <Card.Header>
+            <Skeleton class="h-6 w-48 rounded-lg" />
+          </Card.Header>
+          <Card.Content>
+            <div class="flex gap-5 items-center">
+              <Skeleton class="h-5 w-32 rounded-lg" />
+              <Skeleton class="h-5 w-24 rounded-lg" />
+            </div>
+          </Card.Content>
+        </Card.Root>
       </div>
     {/if}
   {/if}

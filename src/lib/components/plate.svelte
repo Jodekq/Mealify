@@ -8,28 +8,27 @@
   import { toast } from "svelte-sonner";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
+  import Skeleton from "./ui/skeleton/skeleton.svelte";
 
   import type { Meal, ScheduledDate, MealSchedule } from "$lib/types";
 
-  // Make the meal data optional and accept the server structure
-  export let meal: any = null; // For single meal display
-  export let meals: any[] = []; // For multiple meals (like today's meals)
-  // Optional prop to fetch today's meal when no specific meal is provided
+  export let meal: any = null; 
+  export let meals: any[] = [];
+  
   export let fetchTodaysMeal = false;
   
   let selectedDates: string[] = [];
   let availableDates: string[] = [];
   let isLoading = false;
   let todaysMeals: any[] = [];
-  let portions = 1;
-  let originalPortions = 1;
-  let originalMeal = null;
+  
+  let portionsMap = new Map();
+  let originalMealsMap = new Map();
 
-  // Generate dates for the next 20 days
   let dates = Array.from({ length: 20 }, (_, i) => {
     const dateTime = new Date();
     dateTime.setDate(dateTime.getDate() + i);
-    const today = dateTime.toISOString().split('T')[0]; // Use YYYY-MM-DD string format
+    const today = dateTime.toISOString().split('T')[0];
     return today;
   });
 
@@ -37,36 +36,42 @@
     if (fetchTodaysMeal && !meal && meals.length === 0) {
       await fetchTodayMeals();
     } else if (meal) {
-      initializeMeal();
+      initializeMeal(meal);
     } else if (meals.length > 0) {
       todaysMeals = [...meals];
+
+      todaysMeals.forEach(m => {
+        initializeMeal(m);
+      });
     }
   });
 
-  function initializeMeal() {
-    if (!meal) return;
+  function initializeMeal(mealData) {
+    if (!mealData) return;
     
-    originalMeal = JSON.parse(JSON.stringify(meal));
-    portions = meal.portions || 1;
-    originalPortions = meal.portions || 1;
+    const mealId = mealData.id;
     
-    // Check for scheduledDates property
-    if (meal.scheduledDates && meal.scheduledDates.length > 0) {
-      selectedDates = meal.scheduledDates.map(scheduledDate => scheduledDate.date);
+    originalMealsMap.set(mealId, JSON.parse(JSON.stringify(mealData)));
+    
+    portionsMap.set(mealId, mealData.portions || 1);
+    
+    if (mealData.scheduledDates && mealData.scheduledDates.length > 0) {
+      selectedDates = mealData.scheduledDates.map(scheduledDate => scheduledDate.date);
     } 
-    // Fallback to schedule property if scheduledDates doesn't exist
-    else if (meal.schedule && meal.schedule.length > 0) {
-      selectedDates = meal.schedule.map(schedule => {
-        // Handle both Date objects and strings
+    else if (mealData.schedule && mealData.schedule.length > 0) {
+      selectedDates = mealData.schedule.map(schedule => {
         if (schedule.date instanceof Date) {
           return schedule.date.toISOString().split('T')[0];
         }
         return typeof schedule.date === 'string' ? schedule.date : '';
-      }).filter(date => date); // Filter out any empty strings
+      }).filter(date => date); 
     }
     
-    // Optional: fetch additional meal data if needed
-    fetchMealDetails();
+    updateIngredientAmounts(mealData);
+    
+    if (meal && meal.id === mealId) {
+      fetchMealDetails();
+    }
   }
 
   async function fetchTodayMeals() {
@@ -76,6 +81,9 @@
       
       if (data.meals && Array.isArray(data.meals)) {
         todaysMeals = data.meals;
+        todaysMeals.forEach(m => {
+          initializeMeal(m);
+        });
       }
     } catch (error) {
       console.error("Error fetching today's meals:", error);
@@ -94,8 +102,8 @@
     }
   }
 
-  function toggleDate(date: string) {
-    if (!meal) return;
+  function toggleDate(date: string, mealId: string) {
+    if (!mealId) return;
     
     const standardizedDate = new Date(date).toISOString().split('T')[0];
     
@@ -103,10 +111,10 @@
     
     if (index >= 0) {
       selectedDates = [...selectedDates.slice(0, index), ...selectedDates.slice(index + 1)];
-      saveDates();
+      saveDates(mealId);
     } else {
       selectedDates = [...selectedDates, standardizedDate];
-      saveDates();
+      saveDates(mealId);
     }
   }
 
@@ -115,13 +123,13 @@
     return selectedDates.some(d => d === standardizedDate);
   }
 
-  async function saveDates() {
-    if (!meal || !meal.id) return;
+  async function saveDates(mealId: string) {
+    if (!mealId) return;
     
     isLoading = true;
     
     try {
-      const response = await fetch(`/api/schedule/${meal.id}`, {
+      const response = await fetch(`/api/schedule/${mealId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -151,25 +159,54 @@
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
 
-  function updateIngredientAmounts() {
-    if (!originalMeal) return;
+  function updateIngredientAmounts(mealData) {
+    if (!mealData || !mealData.id) return mealData;
     
-    const updatedMeal = JSON.parse(JSON.stringify(originalMeal));
-    const multiplier = portions / originalPortions;
+    const mealId = mealData.id;
     
-    updatedMeal.ingredients = updatedMeal.ingredients.map(ingredient => ({
-      ...ingredient,
-      amount: parseFloat((ingredient.amount * multiplier).toFixed(2))
-    }));
+    const originalMeal = originalMealsMap.get(mealId);
+    if (!originalMeal) return mealData;
     
-    meal = updatedMeal;
+    const currentPortions = portionsMap.get(mealId);
+    const originalPortions = originalMeal.portions || 1;
+    
+    const multiplier = currentPortions / originalPortions;
+    
+    const updatedMeal = JSON.parse(JSON.stringify(mealData));
+    
+    if (updatedMeal.ingredients && updatedMeal.ingredients.length > 0) {
+      updatedMeal.ingredients = updatedMeal.ingredients.map(ingredient => ({
+        ...ingredient,
+        amount: parseFloat((originalMeal.ingredients.find(i => 
+          i.id === ingredient.id
+        )?.amount * multiplier).toFixed(2))
+      }));
+    }
+    
+    return updatedMeal;
   }
 
-  async function shareMeal() {
-    if (!meal || !meal.id) return;
+  function handlePortionChange(mealId, newPortions) {
+    // Update portions for this specific meal
+    portionsMap.set(mealId, newPortions);
+    
+    // If it's the single meal view
+    if (meal && meal.id === mealId) {
+      meal = updateIngredientAmounts(meal);
+    } 
+    // If it's multiple meals view
+    else {
+      todaysMeals = todaysMeals.map(m => 
+        m.id === mealId ? updateIngredientAmounts(m) : m
+      );
+    }
+  }
+
+  async function shareMeal(mealId) {
+    if (!mealId) return;
     
     try {
-      const response = await fetch(`/api/meals/${meal.id}/share`, {
+      const response = await fetch(`/api/meals/${mealId}/share`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -188,7 +225,6 @@
       
       const result = await response.json();
       
-      // Copy to clipboard
       await navigator.clipboard.writeText(result.shareLink);
       toast.success("Share link copied to clipboard!", {
         description: "You can now share this with your friends."
@@ -200,23 +236,19 @@
       });
     }
   }
-
-  $: if (portions && originalMeal) {
-    updateIngredientAmounts();
-  }
 </script>
 
 {#if meal}
   <!-- Single meal display -->
   <Card.Root class="mx-auto mb-4">
-    <Card.Header>
-      <div class="flex gap-2 flex-wrap">
+    <Card.Header class="p-2 sm:p-6">
+      <div class="flex gap-2 flex-wrap sm:justify-between">
         <div class="flex gap-2">
           <Card.Title class="content-center">{meal.name}</Card.Title>
           <DropdownMenu.Root>
-            <DropdownMenu.Trigger class="rounded-lg border px-3 text-sm font-medium flex">
-              <i class='bx bx-info-circle content-center'></i>
-              <div class="content-center"><div class="hidden sm:block pl-2">Time</div></div>
+            <DropdownMenu.Trigger class="rounded-lg border px-3 text-sm font-medium flex items-center">
+              <i class='bx bx-info-circle'></i>
+              <div class="hidden sm:block pl-2">Time</div>
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
               <DropdownMenu.Group>
@@ -243,7 +275,7 @@
               {#each dates as date}
               <Button
                 class="flex flex-col gap-0 hover:bg-primary hover:text-accent {isSelected(date) ? 'bg-primary text-accent' : 'bg-secondary'}"
-                on:click={() => toggleDate(date)}
+                onclick={() => toggleDate(date, meal.id)}
                 title={date}
                 variant="outline"
                 >
@@ -254,13 +286,13 @@
             </div>
           </Popover.Content>
         </Popover.Root>
-        <Button variant="outline" class="content-center flex gap-1" on:click={shareMeal}>
+        <Button variant="outline" class="content-center flex gap-1" onclick={() => shareMeal(meal.id)}>
           <i class='bx bx-share'></i><div class="hidden sm:block pl-1">Share</div>
         </Button>
         <Button variant="outline" class="content-center flex gap-1" href={`/plates/${meal.id}/edit`}>
           <i class='bx bx-edit-alt'></i><div class="hidden sm:block pl-1">Edit</div>
         </Button>
-        <Button variant="destructive" class="px-3 py-2 flex gap-1" on:click={() => window.history.back()}>
+        <Button variant="destructive" class="px-3 py-2 flex gap-1" onclick={() => window.history.back()}>
           <i class='bx bx-x text-lg'></i><div class="hidden sm:block">Close</div>
         </Button>
       </div>
@@ -269,8 +301,15 @@
       <div class="flex flex-col gap-2 rounded-lg border p-2 sticky top-0 w-fit sm:items-start items-center">
         <div class="text-sm font-medium flex justify-center sm:justify-start">
           <div class="flex flex-row rounded-lg bg-secondary px-2 py-2 border w-fit items-center gap-1">
-            <Label for="portions">Portions</Label>
-            <Input type="number" id="portions" name="portions" min="1" bind:value={portions}/>
+            <Label for={`portions-${meal.id}`}>Portions</Label>
+            <Input 
+              type="number" 
+              id={`portions-${meal.id}`} 
+              name="portions" 
+              min="1" 
+              value={portionsMap.get(meal.id) || 1}
+              on:input={(e) => handlePortionChange(meal.id, parseInt(e.currentTarget.value) || 1)}
+            />
           </div>
         </div>
         <div class="px-2 font-bold flex justify-center sm:justify-start">Ingredients</div>
@@ -309,14 +348,14 @@
   
 {:else if todaysMeals.length > 0 || meals.length > 0}
   <!-- Multiple meals display -->
-  {#each (todaysMeals.length > 0 ? todaysMeals : meals) as currentMeal}
+  {#each (todaysMeals.length > 0 ? todaysMeals : meals) as currentMeal (currentMeal.id)}
     <Card.Root class="mx-auto mb-4">
-      <Card.Header>
-        <div class="flex gap-2">
+      <Card.Header class="p-2 sm:p-6">
+        <div class="flex gap-2 flex-wrap sm:justify-between">
           <div class="flex gap-2">
             <Card.Title class="content-center">{currentMeal.name}</Card.Title>
             <DropdownMenu.Root>
-              <DropdownMenu.Trigger class="rounded-lg border px-3 py-2 text-sm font-medium flex">
+              <DropdownMenu.Trigger class="rounded-lg border px-3 py-2 text-sm font-medium flex items-center">
                 <i class='bx bx-info-circle content-center'></i>
                 <div class="content-center"><div class="hidden sm:block sm:pl-2">Time</div></div>
               </DropdownMenu.Trigger>
@@ -345,7 +384,7 @@
                 {#each dates as date}
                 <Button
                   class="flex flex-col gap-0 hover:bg-primary hover:text-accent {isSelected(date) ? 'bg-primary text-accent' : 'bg-secondary'}"
-                  on:click={() => toggleDate(date)}
+                  onclick={() => toggleDate(date, currentMeal.id)}
                   title={date}
                   variant="outline"
                   >
@@ -357,7 +396,7 @@
             </Popover.Content>
           </Popover.Root>
           <div class="flex gap-2">
-            <Button variant="outline" class="content-center flex gap-1" on:click={shareMeal}>
+            <Button variant="outline" class="content-center flex gap-1" onclick={() => shareMeal(currentMeal.id)}>
               <i class='bx bx-share'></i><div class="hidden sm:block pl-1">Share</div>
             </Button>
             <Button variant="outline" class="content-center" href={`/plates/${currentMeal.id}/edit`}>
@@ -367,7 +406,20 @@
         </div>
       </Card.Header>
       <Card.Content class="flex flex-col sm:flex-row gap-4">
-        <div class="flex flex-col gap-2 rounded-lg border p-2 sticky top-0 w-fit sm:items-start items-center">
+        <div class="flex flex-col gap-2 rounded-lg border p-2 sticky top-0 sm:w-fit w-full sm:items-start items-center z-40 bg-card">
+          <div class="text-sm font-medium flex justify-center sm:justify-start">
+            <div class="flex flex-row rounded-lg bg-secondary px-2 py-2 border w-fit items-center gap-1">
+              <Label for={`portions-${currentMeal.id}`}>Portions</Label>
+              <Input 
+                type="number" 
+                id={`portions-${currentMeal.id}`} 
+                name="portions" 
+                min="1" 
+                value={portionsMap.get(currentMeal.id) || 1}
+                on:input={(e) => handlePortionChange(currentMeal.id, parseInt(e.currentTarget.value) || 1)}
+              />
+            </div>
+          </div>
           <div class="px-2 font-bold flex justify-center sm:justify-start">Ingredients</div>
           <div class="flex flex-col gap-2 px-2">
             {#each currentMeal.ingredients as mealIngredient}
@@ -408,8 +460,54 @@
     <Button variant="default" href="/saved_plates">Click here to add one</Button> 
   </div>
 {:else}
-<!-- Add skeleton -->
-  <div class="flex justify-center">
-    <p>No meal data provided</p>
-  </div>
+<Card.Root class="mx-auto mb-4">
+  <Card.Header class="p-2 sm:p-6">
+    <div class="flex gap-2 justify-between">
+      <div class="flex gap-2 items-center">
+        <Skeleton class="h-10 w-24 rounded-lg" />
+        <Skeleton class="h-10 w-10 rounded-lg" />
+      </div>
+      <Skeleton class="h-10 w-12 rounded-lg" />
+      <div class="flex gap-2">
+        <Skeleton class="h-10 w-12 rounded-lg" />
+        <Skeleton class="h-10 w-12 rounded-lg" />
+      </div>
+    </div>
+  </Card.Header>
+  <Card.Content class="flex flex-col sm:flex-row gap-4">
+    <div class="flex flex-col gap-2 rounded-lg border p-2 sticky top-0 sm:w-1/3 w-full">
+      <div class="text-sm font-medium w-full flex justify-center sm:justify-start">
+        <Skeleton class="h-10 w-48 rounded-lg" />
+      </div>
+      <div class="px-2 font-bold flex justify-center sm:justify-start">
+        <Skeleton class="h-6 w-24 rounded-lg" />
+      </div>
+      <div class="flex flex-col gap-2 px-2">
+        <Skeleton class="h-5 w-full rounded-lg" />
+        <Skeleton class="h-5 w-full rounded-lg" />
+        <Skeleton class="h-5 w-full rounded-lg" />
+        <Skeleton class="h-5 w-full rounded-lg" />
+        <Skeleton class="h-5 w-full rounded-lg" />
+      </div>
+    </div>
+    <div class="sm:w-2/3 w-full">
+      <div class="flex flex-col gap-4">
+        {#each Array(2) as _, i}
+          <div class="flex flex-col sm:flex-row gap-4">
+            <div class="sm:w-1/4 rounded-lg border p-2">
+              <div class="flex flex-col items-center gap-2">
+                <Skeleton class="h-8 w-8 rounded-full" />
+                <Skeleton class="h-6 w-32 rounded-lg" />
+                <Skeleton class="h-4 w-24 rounded-lg" />
+              </div>
+            </div>
+            <div class="sm:w-3/4 rounded-lg border p-2">
+              <Skeleton class="h-20 w-full rounded-lg" />
+            </div>
+          </div>
+        {/each}
+      </div>
+    </div>
+  </Card.Content>
+</Card.Root>
 {/if}
