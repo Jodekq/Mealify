@@ -187,18 +187,18 @@
   <meta name="description" content="A recipe for {meal.name} shared by {creatorUsername}." />
   
   <meta property="og:type" content="website" />
-  <meta property="og:url" content={`${import.meta.env.VITE_APP_URL || ''}/shared/${data.shareCode}`} />
+  <meta property="og:url" content={`https://platepilot.dev/shared/${data.shareCode}`} />
   <meta property="og:title" content="{meal.name} | Plate Pilot" />
   <meta property="og:description" content="A recipe for {meal.name} shared by {creatorUsername}." />
-  <meta property="og:image" content={`${import.meta.env.VITE_APP_URL || ''}/api/og/shared/${data.shareCode}`} />
+  <meta property="og:image" content={`https://platepilot.dev/api/og/shared/${data.shareCode}`} />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   
   <meta property="twitter:card" content="summary_large_image" />
-  <meta property="twitter:url" content={`${import.meta.env.VITE_APP_URL || ''}/shared/${data.shareCode}`} />
+  <meta property="twitter:url" content={`https://platepilot.dev/shared/${data.shareCode}`} />
   <meta property="twitter:title" content="{meal.name} | Plate Pilot" />
   <meta property="twitter:description" content="A recipe for {meal.name} shared by {creatorUsername}." />
-  <meta property="twitter:image" content={`${import.meta.env.VITE_APP_URL || ''}/api/og/shared/${data.shareCode}`} />
+  <meta property="twitter:image" content={`https://platepilot.dev/api/og/shared/${data.shareCode}`} />
   
   <meta name="theme-color" content="#22c55e" />
 {/if}
