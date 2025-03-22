@@ -312,10 +312,10 @@
         </Popover.Root>
         <div class="flex gap-2">
           <Button variant="outline" class="content-center flex gap-1 hidden sm:block" on:click={() => shareMeal(meal.id)}>
-            <i class='bx bx-share'></i><div class="block pl-1">Share</div>
+            <i class='bx bx-share'></i><div class="pl-1">Share</div>
           </Button>
           <Button variant="outline" class="content-center flex gap-1 hidden sm:block" href={`/plates/${meal.id}/edit`}>
-            <i class='bx bx-edit-alt'></i><div class="block pl-1">Edit</div>
+            <i class='bx bx-edit-alt'></i><div class="pl-1">Edit</div>
           </Button>
           <Button variant="destructive" class="px-3 py-2 flex gap-1" on:click={() => window.history.back()}>
             <i class='bx bx-x text-lg'></i><div class="hidden sm:block">Close</div>
