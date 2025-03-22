@@ -371,10 +371,10 @@
       </ScrollArea>
       <div class="flex gap-2">
         <Button variant="outline" class="content-center flex gap-1 sm:hidden w-full" on:click={() => shareMeal(meal.id)}>
-          <i class='bx bx-share'></i><div class="block pl-1">Share</div>
+          <i class='bx bx-share'></i><div class="pl-1">Share</div>
         </Button>
         <Button variant="outline" class="content-center flex gap-1 sm:hidden w-full" href={`/plates/${meal.id}/edit`}>
-          <i class='bx bx-edit-alt'></i><div class="block pl-1">Edit</div>
+          <i class='bx bx-edit-alt'></i><div class="pl-1">Edit</div>
         </Button>
       </div>
     </Card.Content>
