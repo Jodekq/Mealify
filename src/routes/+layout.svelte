@@ -7,6 +7,10 @@
 	import '@fontsource-variable/montserrat';
 	import '@fontsource-variable/nunito';
 
+	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
+
+	injectSpeedInsights();
+
 	export let data;
 </script>
 
