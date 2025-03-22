@@ -277,12 +277,12 @@
         <Popover.Trigger asChild let:builder>
           <Button 
             builders={[builder]} 
-            variant="ghost" 
+            variant="secondary" 
             size="icon" 
-            class="h-6 w-6"
+            class="h-6 w-full"
             onclick={() => openMealSelector(formatted)}
           >
-            <Plus class="h-4 w-4" />
+          <i class='bx bx-plus text-lg'></i>
           </Button>
         </Popover.Trigger>
         

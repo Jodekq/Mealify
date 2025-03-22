@@ -12,34 +12,33 @@
 
   import type { Meal, ScheduledDate, MealSchedule } from "$lib/types";
 
+  // Props
   export let meal: any = null; 
   export let meals: any[] = [];
-  
   export let fetchTodaysMeal = false;
   
+  // State variables
   let selectedDates: string[] = [];
   let availableDates: string[] = [];
   let isLoading = false;
   let todaysMeals: any[] = [];
-  
-  let portionsMap = new Map();
-  let originalMealsMap = new Map();
+  let portionsMap = {};
+  let originalMealsMap = {};
 
+  // Generate dates for the next 20 days
   let dates = Array.from({ length: 20 }, (_, i) => {
     const dateTime = new Date();
     dateTime.setDate(dateTime.getDate() + i);
-    const today = dateTime.toISOString().split('T')[0];
-    return today;
+    return dateTime.toISOString().split('T')[0];
   });
 
   onMount(async () => {
-    if (fetchTodaysMeal && !meal && meals.length === 0) {
+    if (fetchTodaysMeal && !meal && (!meals || meals.length === 0)) {
       await fetchTodayMeals();
     } else if (meal) {
       initializeMeal(meal);
-    } else if (meals.length > 0) {
+    } else if (meals && meals.length > 0) {
       todaysMeals = [...meals];
-
       todaysMeals.forEach(m => {
         initializeMeal(m);
       });
@@ -47,31 +46,48 @@
   });
 
   function initializeMeal(mealData) {
-    if (!mealData) return;
+    if (!mealData || !mealData.id) return;
     
     const mealId = mealData.id;
     
-    originalMealsMap.set(mealId, JSON.parse(JSON.stringify(mealData)));
+    // Store original meal for portion calculations
+    originalMealsMap[mealId] = JSON.parse(JSON.stringify(mealData));
     
-    portionsMap.set(mealId, mealData.portions || 1);
+    // Set initial portions
+    portionsMap[mealId] = mealData.portions || 1;
     
-    if (mealData.scheduledDates && mealData.scheduledDates.length > 0) {
-      selectedDates = mealData.scheduledDates.map(scheduledDate => scheduledDate.date);
-    } 
-    else if (mealData.schedule && mealData.schedule.length > 0) {
-      selectedDates = mealData.schedule.map(schedule => {
-        if (schedule.date instanceof Date) {
-          return schedule.date.toISOString().split('T')[0];
-        }
-        return typeof schedule.date === 'string' ? schedule.date : '';
-      }).filter(date => date); 
-    }
-    
-    updateIngredientAmounts(mealData);
-    
+    // Process scheduled dates - only for single meal view
     if (meal && meal.id === mealId) {
-      fetchMealDetails();
+      let mealDates = [];
+      
+      if (mealData.scheduledDates && mealData.scheduledDates.length > 0) {
+        mealDates = mealData.scheduledDates
+          .map(scheduledDate => {
+            if (typeof scheduledDate.date === 'string') {
+              return scheduledDate.date;
+            } else if (scheduledDate.date instanceof Date) {
+              return scheduledDate.date.toISOString().split('T')[0];
+            }
+            return '';
+          })
+          .filter(date => date);
+      } 
+      else if (mealData.schedule && mealData.schedule.length > 0) {
+        mealDates = mealData.schedule
+          .map(schedule => {
+            if (schedule.date instanceof Date) {
+              return schedule.date.toISOString().split('T')[0];
+            }
+            return typeof schedule.date === 'string' ? schedule.date : '';
+          })
+          .filter(date => date);
+      }
+      
+      selectedDates = mealDates;
     }
+    
+    // Update ingredients based on portions
+    updateIngredientAmounts(mealData);
   }
 
   async function fetchTodayMeals() {
@@ -90,40 +106,36 @@
     }
   }
 
-  async function fetchMealDetails() {
+  function toggleDate(date) {
     if (!meal || !meal.id) return;
     
-    try {
-      const res = await fetch(`/api/meals/${meal.id}`);
-      const data = await res.json();
-      availableDates = data.days?.map(day => day.date) || [];
-    } catch (error) {
-      console.error("Error fetching meal details:", error);
-    }
-  }
-
-  function toggleDate(date: string, mealId: string) {
-    if (!mealId) return;
-    
     const standardizedDate = new Date(date).toISOString().split('T')[0];
-    
     const index = selectedDates.findIndex(d => d === standardizedDate);
     
     if (index >= 0) {
+      // Remove date
       selectedDates = [...selectedDates.slice(0, index), ...selectedDates.slice(index + 1)];
-      saveDates(mealId);
+      toast.success("Date removed from schedule");
     } else {
+      // Add date
       selectedDates = [...selectedDates, standardizedDate];
-      saveDates(mealId);
+      toast.success("Date added to schedule");
     }
+    
+    saveDates(meal.id, selectedDates);
   }
 
-  function isSelected(date: string): boolean {
+  function isDateSelected(date) {
+    if (!selectedDates) return false;
+    
     const standardizedDate = new Date(date).toISOString().split('T')[0];
-    return selectedDates.some(d => d === standardizedDate);
+    return selectedDates.some(d => 
+      d === standardizedDate || 
+      new Date(d).toISOString().split('T')[0] === standardizedDate
+    );
   }
 
-  async function saveDates(mealId: string) {
+  async function saveDates(mealId, dates) {
     if (!mealId) return;
     
     isLoading = true;
@@ -134,7 +146,7 @@
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ dates: selectedDates })
+        body: JSON.stringify({ dates })
       });
       
       if (!response.ok) {
@@ -153,7 +165,9 @@
     }
   }
 
-  const formatTime = (minutes: number) => {
+  const formatTime = (minutes) => {
+    if (!minutes || isNaN(minutes)) return "0m";
+    
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
@@ -163,39 +177,46 @@
     if (!mealData || !mealData.id) return mealData;
     
     const mealId = mealData.id;
+    const originalMeal = originalMealsMap[mealId];
     
-    const originalMeal = originalMealsMap.get(mealId);
     if (!originalMeal) return mealData;
     
-    const currentPortions = portionsMap.get(mealId);
+    const currentPortions = portionsMap[mealId] || 1;
     const originalPortions = originalMeal.portions || 1;
-    
     const multiplier = currentPortions / originalPortions;
     
     const updatedMeal = JSON.parse(JSON.stringify(mealData));
     
     if (updatedMeal.ingredients && updatedMeal.ingredients.length > 0) {
-      updatedMeal.ingredients = updatedMeal.ingredients.map(ingredient => ({
-        ...ingredient,
-        amount: parseFloat((originalMeal.ingredients.find(i => 
-          i.id === ingredient.id
-        )?.amount * multiplier).toFixed(2))
-      }));
+      updatedMeal.ingredients = updatedMeal.ingredients.map(ingredient => {
+        const originalIngredient = originalMeal.ingredients.find(i => 
+          i.id === ingredient.id || 
+          (i.ingredient && i.ingredient.id === ingredient.ingredient?.id)
+        );
+        
+        if (!originalIngredient) return ingredient;
+        
+        const originalAmount = originalIngredient.amount;
+        const newAmount = parseFloat((originalAmount * multiplier).toFixed(2));
+        
+        return {
+          ...ingredient,
+          amount: newAmount
+        };
+      });
     }
     
     return updatedMeal;
   }
 
   function handlePortionChange(mealId, newPortions) {
-    // Update portions for this specific meal
-    portionsMap.set(mealId, newPortions);
+    portionsMap[mealId] = newPortions;
+    portionsMap = {...portionsMap}; // Force reactivity update
     
-    // If it's the single meal view
     if (meal && meal.id === mealId) {
       meal = updateIngredientAmounts(meal);
     } 
-    // If it's multiple meals view
-    else {
+    else if (todaysMeals.length > 0) {
       todaysMeals = todaysMeals.map(m => 
         m.id === mealId ? updateIngredientAmounts(m) : m
       );
@@ -242,7 +263,7 @@
   <!-- Single meal display -->
   <Card.Root class="mx-auto mb-4">
     <Card.Header class="p-2 sm:p-6">
-      <div class="flex gap-2 flex-wrap sm:justify-between">
+      <div class="flex gap-2 justify-between">
         <div class="flex gap-2">
           <Card.Title class="content-center">{meal.name}</Card.Title>
           <DropdownMenu.Root>
@@ -265,7 +286,10 @@
           <Popover.Trigger>
             <Button variant="outline">
               <div class="flex items-center gap-2">
-                <i class='bx bxs-calendar'></i><div class="hidden sm:block">Schedule ({selectedDates.length})</div>
+                <i class='bx bxs-calendar'></i>
+                <div class="hidden sm:block">
+                  Schedule ({selectedDates.length})
+                </div>
               </div>
             </Button>
           </Popover.Trigger>
@@ -274,8 +298,8 @@
             <div class="grid grid-cols-5 gap-2 mb-4 text-white">
               {#each dates as date}
               <Button
-                class="flex flex-col gap-0 hover:bg-primary hover:text-accent {isSelected(date) ? 'bg-primary text-accent' : 'bg-secondary'}"
-                onclick={() => toggleDate(date, meal.id)}
+                class="flex flex-col gap-0 hover:bg-primary hover:text-accent {isDateSelected(date) ? 'bg-primary text-accent' : 'bg-secondary'}"
+                on:click={() => toggleDate(date)}
                 title={date}
                 variant="outline"
                 >
@@ -286,19 +310,21 @@
             </div>
           </Popover.Content>
         </Popover.Root>
-        <Button variant="outline" class="content-center flex gap-1" onclick={() => shareMeal(meal.id)}>
-          <i class='bx bx-share'></i><div class="hidden sm:block pl-1">Share</div>
-        </Button>
-        <Button variant="outline" class="content-center flex gap-1" href={`/plates/${meal.id}/edit`}>
-          <i class='bx bx-edit-alt'></i><div class="hidden sm:block pl-1">Edit</div>
-        </Button>
-        <Button variant="destructive" class="px-3 py-2 flex gap-1" onclick={() => window.history.back()}>
-          <i class='bx bx-x text-lg'></i><div class="hidden sm:block">Close</div>
-        </Button>
+        <div class="flex gap-2">
+          <Button variant="outline" class="content-center flex gap-1 hidden sm:block" on:click={() => shareMeal(meal.id)}>
+            <i class='bx bx-share'></i><div class="block pl-1">Share</div>
+          </Button>
+          <Button variant="outline" class="content-center flex gap-1 hidden sm:block" href={`/plates/${meal.id}/edit`}>
+            <i class='bx bx-edit-alt'></i><div class="block pl-1">Edit</div>
+          </Button>
+          <Button variant="destructive" class="px-3 py-2 flex gap-1" on:click={() => window.history.back()}>
+            <i class='bx bx-x text-lg'></i><div class="hidden sm:block">Close</div>
+          </Button>
+        </div>
       </div>
     </Card.Header>
     <Card.Content class="flex flex-col sm:flex-row gap-4">
-      <div class="flex flex-col gap-2 rounded-lg border p-2 sticky top-0 w-fit sm:items-start items-center">
+      <div class="flex flex-col gap-2 rounded-lg border p-2 sticky top-0 w-full sm:w-fit sm:items-start items-center">
         <div class="text-sm font-medium flex justify-center sm:justify-start">
           <div class="flex flex-row rounded-lg bg-secondary px-2 py-2 border w-fit items-center gap-1">
             <Label for={`portions-${meal.id}`}>Portions</Label>
@@ -307,7 +333,7 @@
               id={`portions-${meal.id}`} 
               name="portions" 
               min="1" 
-              value={portionsMap.get(meal.id) || 1}
+              value={portionsMap[meal.id] || 1}
               on:input={(e) => handlePortionChange(meal.id, parseInt(e.currentTarget.value) || 1)}
             />
           </div>
@@ -343,7 +369,15 @@
           {/each}
         </div>
       </ScrollArea>
-    </Card.Content>    
+      <div class="flex gap-2">
+        <Button variant="outline" class="content-center flex gap-1 sm:hidden w-full" on:click={() => shareMeal(meal.id)}>
+          <i class='bx bx-share'></i><div class="block pl-1">Share</div>
+        </Button>
+        <Button variant="outline" class="content-center flex gap-1 sm:hidden w-full" href={`/plates/${meal.id}/edit`}>
+          <i class='bx bx-edit-alt'></i><div class="block pl-1">Edit</div>
+        </Button>
+      </div>
+    </Card.Content>
   </Card.Root>
   
 {:else if todaysMeals.length > 0 || meals.length > 0}
@@ -370,37 +404,15 @@
               </DropdownMenu.Content>
             </DropdownMenu.Root>
           </div>
-          <Popover.Root>
-            <Popover.Trigger>
-              <Button variant="outline">
-                <div class="flex items-center gap-2">
-                  <i class='bx bxs-calendar'></i><div class="hidden sm:block">Schedule ({selectedDates.length})</div>
-                </div>
-              </Button>
-            </Popover.Trigger>
-            <Popover.Content>
-              <h3 class="text-lg font-semibold mb-2">Schedule plate</h3>
-              <div class="grid grid-cols-5 gap-2 mb-4 text-white">
-                {#each dates as date}
-                <Button
-                  class="flex flex-col gap-0 hover:bg-primary hover:text-accent {isSelected(date) ? 'bg-primary text-accent' : 'bg-secondary'}"
-                  onclick={() => toggleDate(date, currentMeal.id)}
-                  title={date}
-                  variant="outline"
-                  >
-                  <span class="text-sm">{new Date(date).getDate()}</span>
-                  <span class="text-xs">{new Date(date).toDateString().split(' ')[1]}</span>
-                </Button>
-                {/each}
-              </div>
-            </Popover.Content>
-          </Popover.Root>
           <div class="flex gap-2">
-            <Button variant="outline" class="content-center flex gap-1" onclick={() => shareMeal(currentMeal.id)}>
+            <Button variant="outline" class="content-center flex gap-1" on:click={() => shareMeal(currentMeal.id)}>
               <i class='bx bx-share'></i><div class="hidden sm:block pl-1">Share</div>
             </Button>
             <Button variant="outline" class="content-center" href={`/plates/${currentMeal.id}/edit`}>
               <i class='bx bx-edit-alt'></i><div class="hidden sm:block pl-1">Edit</div>
+            </Button>
+            <Button variant="outline" class="content-center" href={`/plates/${currentMeal.id}`}>
+              <i class='bx bx-calendar'></i><div class="hidden sm:block pl-1">Schedule</div>
             </Button>
           </div>
         </div>
@@ -415,7 +427,7 @@
                 id={`portions-${currentMeal.id}`} 
                 name="portions" 
                 min="1" 
-                value={portionsMap.get(currentMeal.id) || 1}
+                value={portionsMap[currentMeal.id] || 1}
                 on:input={(e) => handlePortionChange(currentMeal.id, parseInt(e.currentTarget.value) || 1)}
               />
             </div>
