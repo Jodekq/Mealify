@@ -69,7 +69,7 @@ model MealIngredient {
   meal_id      String
   ingredient   Ingredient  @relation(fields: [ingredient_id], references: [id], onDelete: Cascade)
   ingredient_id String
-  amount       Float
+  amount       Float?
 
   @@index([meal_id])
   @@index([ingredient_id])
@@ -78,7 +78,7 @@ model MealIngredient {
 model Ingredient {
   id   String  @id @unique @default(uuid())
   name String  @unique
-  unit String 
+  unit String? 
   meals MealIngredient[]
 }
 

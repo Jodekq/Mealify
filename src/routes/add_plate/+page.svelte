@@ -84,7 +84,12 @@
   function selectUnit(ingredientId, selectedUnit) {
     ingredients = ingredients.map(ingredient => 
       ingredient.id === ingredientId 
-        ? { ...ingredient, unit: selectedUnit.value || selectedUnit } 
+        ? { 
+            ...ingredient, 
+            unit: selectedUnit && selectedUnit.value === "" 
+              ? null 
+              : (selectedUnit && selectedUnit.value) || null 
+          } 
         : ingredient
     );
   }
@@ -157,14 +162,17 @@
                   {ingredient.unit || 'Select unit'}
                 </Select.Trigger>
                 <Select.Content class="w-[180px]">
-                  <Select.Item value="gram">g (gram)</Select.Item>
-                  <Select.Item value="kilogram">kg (kilogram)</Select.Item>
-                  <Select.Item value="milliliter">ml (milliliter)</Select.Item>
-                  <Select.Item value="liter">l (liter)</Select.Item>
+                  <Select.Item value="">none</Select.Item>
+                  <Select.Item value="g">g</Select.Item>
+                  <Select.Item value="kg">kg</Select.Item>
+                  <Select.Item value="ml">ml</Select.Item>
+                  <Select.Item value="L">L</Select.Item>
                   <Select.Item value="piece">piece</Select.Item>
-                  <Select.Item value="teaspoon">tsp (teaspoon)</Select.Item>
-                  <Select.Item value="tablespoon">tbsp (tablespoon)</Select.Item>
-                  <Select.Item value="cup">cup (cup)</Select.Item>
+                  <Select.Item value="TL">TL</Select.Item>
+                  <Select.Item value="EL">EL</Select.Item>
+                  <Select.Item value="tsp">tsp</Select.Item>
+                  <Select.Item value="tbsp">tbsp</Select.Item>
+                  <Select.Item value="cup">cup</Select.Item>
                 </Select.Content>
               </Select.Root>
             </div>

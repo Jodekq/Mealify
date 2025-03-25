@@ -99,6 +99,7 @@ async function handleSubmit() {
         completeLoading();
         toast.success('Meal updated successfully!');
         const updatedData = await response.json();
+        window.location.href = `/plates/${meal.id}`;
       } else {
         const errorData = await response.json();
         toast.error(errorData.message || 'Failed to update meal');
@@ -136,12 +137,24 @@ async function handleSubmit() {
   }
 
   function selectUnit(ingredientId, selectedUnit) {
-    ingredients = ingredients.map(ingredient => 
-      ingredient.id === ingredientId 
-        ? { ...ingredient, unit: selectedUnit.value || selectedUnit } 
-        : ingredient
-    );
-  }
+  
+  ingredients = ingredients.map(ingredient => {
+    if (ingredient.id === ingredientId) {
+      let unitValue = null;
+      
+      if (selectedUnit) {
+        if (typeof selectedUnit === 'string') {
+          unitValue = selectedUnit;
+        } else if (selectedUnit.value !== undefined) {
+          unitValue = selectedUnit.value === "" ? null : selectedUnit.value;
+        }
+      }
+      
+      return { ...ingredient, unit: unitValue };
+    }
+    return ingredient;
+  });
+}
 </script>
 
 <div class="sm:container mt-4 mx-auto px-2">
@@ -158,7 +171,7 @@ async function handleSubmit() {
             <Input type="number" id="portions" bind:value={portions} placeholder="portions" />
           </div>
           <div class="w-1/4 self-end flex justify-end gap-2">
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} >
               {isSubmitting ? 'Saving...' : 'Save'}
             </Button>
             <AlertDialog.Root>
@@ -212,14 +225,17 @@ async function handleSubmit() {
                   {ingredient.unit || 'Select unit'}
                 </Select.Trigger>
                 <Select.Content>
-                  <Select.Item value="gram">g (gram)</Select.Item>
-                  <Select.Item value="kilogram">kg (kilogram)</Select.Item>
-                  <Select.Item value="milliliter">ml (milliliter)</Select.Item>
-                  <Select.Item value="liter">l (liter)</Select.Item>
+                  <Select.Item value="">none</Select.Item>
+                  <Select.Item value="g">g</Select.Item>
+                  <Select.Item value="kg">kg</Select.Item>
+                  <Select.Item value="ml">ml</Select.Item>
+                  <Select.Item value="L">L</Select.Item>
                   <Select.Item value="piece">piece</Select.Item>
-                  <Select.Item value="teaspoon">tsp (teaspoon)</Select.Item>
-                  <Select.Item value="tablespoon">tbsp (tablespoon)</Select.Item>
-                  <Select.Item value="cup">cup (cup)</Select.Item>
+                  <Select.Item value="TL">TL</Select.Item>
+                  <Select.Item value="EL">EL</Select.Item>
+                  <Select.Item value="tsp">tsp</Select.Item>
+                  <Select.Item value="tbsp">tbsp</Select.Item>
+                  <Select.Item value="cup">cup</Select.Item>
                 </Select.Content>
               </Select.Root>
             </div>

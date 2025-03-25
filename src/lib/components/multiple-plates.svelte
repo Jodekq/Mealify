@@ -162,7 +162,7 @@
         </div>
       </Card.Header>
       <Card.Content class="flex flex-col sm:flex-row gap-4">
-        <div class="flex flex-col gap-2 rounded-lg border p-2 sticky top-0 sm:w-fit w-full sm:items-start items-center z-40 bg-card">
+        <div class="flex flex-col gap-2 rounded-lg border p-2 sm:w-fit w-full sm:items-start items-center z-40 bg-card">
           <div class="text-sm font-medium flex justify-center sm:justify-start">
             <div class="flex flex-row rounded-lg bg-secondary px-2 py-2 border w-fit items-center gap-1">
               <Label for={`portions-${currentMeal.id}`}>Portions</Label>
@@ -191,9 +191,13 @@
                   unit={mealIngredient.ingredient.unit}
                   compact={true}
                 />
-                <div>
-                  {mealIngredient.amount} {mealIngredient.ingredient.unit} {mealIngredient.ingredient.name}
-                </div>
+                {#if mealIngredient.amount}
+                  {mealIngredient.amount} 
+                {/if}
+                {#if mealIngredient.ingredient.unit}
+                  {mealIngredient.ingredient.unit} 
+                {/if}
+                {mealIngredient.ingredient.name}
               </div>
             {/each}
           </div>

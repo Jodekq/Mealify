@@ -11,18 +11,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   }
   
   try {
-    // Ensure the ID is valid
     const mealId = params.id;
     
     if (!mealId) {
       throw error(404, 'Meal not found');
     }
     
-    // Fetch the meal with related data
     const meal = await prisma.meal.findUnique({
       where: {
         id: mealId,
-        user_id: userId // Ensure the meal belongs to the current user
+        user_id: userId 
       },
       include: {
         ingredients: {

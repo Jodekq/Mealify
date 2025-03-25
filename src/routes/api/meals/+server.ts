@@ -89,7 +89,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
           ingredient = await prisma.ingredient.create({
             data: {
               name: ing.name,
-              unit: ing.unit
+              unit: ing.unit || ""
             }
           });
         }
@@ -102,7 +102,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
             ingredient: {
               connect: { id: ingredient.id }
             },
-            amount: parseFloat(ing.amount) || 0
+            amount: parseFloat(ing.amount) || null
           }
         });
       }

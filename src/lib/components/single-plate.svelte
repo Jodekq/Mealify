@@ -358,7 +358,7 @@
       </div>
     </Card.Header>
     <Card.Content class="flex flex-col sm:flex-row gap-4">
-      <div class="flex flex-col gap-2 rounded-lg border p-2 sticky top-0 w-full sm:w-fit sm:items-start items-center">
+      <div class="flex flex-col gap-2 rounded-lg border p-2 w-full sm:w-fit sm:items-start items-center z-40 bg-card">
         <div class="text-sm font-medium flex justify-center sm:justify-start">
           <div class="flex flex-row rounded-lg bg-secondary px-2 py-2 border w-fit items-center gap-1">
             <Label for={`portions-${meal.id}`}>Portions</Label>
@@ -382,12 +382,18 @@
                 unit={mealIngredient.ingredient.unit}
                 compact={true}
               />
-              {mealIngredient.amount} {mealIngredient.ingredient.unit} {mealIngredient.ingredient.name}
+              {#if mealIngredient.amount}
+                {mealIngredient.amount} 
+              {/if}
+              {#if mealIngredient.ingredient.unit}
+                {mealIngredient.ingredient.unit} 
+              {/if}
+              {mealIngredient.ingredient.name}
             </div>
           {/each}
         </div>
       </div>
-      <ScrollArea class="h-[300px] w-full overflow-auto">
+      <ScrollArea class="h-fit w-full overflow-auto">
         <div class="flex flex-col gap-4">
           {#each meal.steps || [] as step}
             <div class="flex flex-col sm:flex-row gap-4">

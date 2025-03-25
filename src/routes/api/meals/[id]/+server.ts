@@ -16,46 +16,63 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 };
 
 export async function PUT({ params, request }) {
-  const { id } = params;
-  const data = await request.json();
-
-  const updatedMeal = await prisma.meal.update({
-    where: { id },
-    data: {
-      name: data.name,
-      workingTime: data.workingTime,
-      cookingTime: data.cookingTime,
-      restTime: data.restTime,
-      totalTime: data.totalTime,
-      portions: data.portions,
-      ingredients: {
-        deleteMany: {},
-        create: data.ingredients.map((ing) => ({
-          amount: ing.amount,
-          ingredient: {
-            connectOrCreate: {
-              where: { name: ing.name },
-              create: {
-                name: ing.name,
-                unit: ing.unit,
+  try {
+    const { id } = params;
+    const data = await request.json();
+    
+    const totalTime = (parseInt(data.workingTime) || 0) + 
+                      (parseInt(data.cookingTime) || 0) + 
+                      (parseInt(data.restTime) || 0);
+    
+    const updatedMeal = await prisma.meal.update({
+      where: { id },
+      data: {
+        name: data.name,
+        workingTime: parseInt(data.workingTime) || 0,
+        cookingTime: parseInt(data.cookingTime) || 0,
+        restTime: parseInt(data.restTime) || 0,
+        totalTime: totalTime,
+        portions: parseInt(data.portions) || 1,
+        ingredients: {
+          deleteMany: {},
+          create: data.ingredients.map((ing) => {
+            const amount = ing.amount !== undefined && ing.amount !== '' 
+              ? parseFloat(ing.amount) 
+              : 0;
+            
+            const unit = ing.unit !== undefined ? ing.unit : "";
+              
+            return {
+              amount: amount,
+              ingredient: {
+                connectOrCreate: {
+                  where: { name: ing.name },
+                  create: {
+                    name: ing.name,
+                    unit: unit,
+                  }
+                }
               }
-            }
-          }
-        })),
+            };
+          }),
+        },
+        steps: {
+          deleteMany: {}, 
+          create: data.steps.map((step, index) => ({
+            stepNumber: index + 1,
+            text: step.text || "",
+            extraText: step.extra_text || null,
+            description: step.description || null,
+          })),
+        },
       },
-      steps: {
-        deleteMany: {}, 
-        create: data.steps.map((step, index) => ({
-          stepNumber: index + 1,
-          text: step.text,
-          extraText: step.extraText,
-          description: step.description,
-        })),
-      },
-    },
-  });
-
-  return json(updatedMeal);
+    });
+    
+    return json(updatedMeal);
+  } catch (error) {
+    console.error("Error updating meal:", error);
+    return json({ error: error.message || "Failed to update meal" }, { status: 500 });
+  }
 }
 
 export async function DELETE({ params }) {
