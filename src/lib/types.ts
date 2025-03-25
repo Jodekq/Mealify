@@ -74,3 +74,18 @@ export type ScheduledDate = {
   id: string;
   date: string;
 };
+
+export type tobuyItem = {
+  id: string;
+  name: string;
+  amount: number | null;
+  unit: string | null;
+  checked: boolean;
+};
+
+export type tobuyList = {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  items: tobuyItem[];
+};

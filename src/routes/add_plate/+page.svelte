@@ -142,6 +142,10 @@
           <Button variant="outline" class="content-center mb-4" type="button" onclick={addIngredient}><i class='bx bx-plus'></i> Add Ingredient</Button>
           {#each ingredients as ingredient (ingredient.id)}
           <div class="flex gap-2">
+            <div class="sm:w-3/4 w-2/4">
+              <Label class="pl-1" for={`ingredient_name-${ingredient.id}`}>Name</Label>
+              <Input type="text" id={`ingredient_name-${ingredient.id}`} bind:value={ingredient.name} placeholder="name" />
+            </div>
             <div class="w-1/4">
               <Label class="pl-1" for={`amount-${ingredient.id}`}>Amount</Label>
               <Input type="number" id={`amount-${ingredient.id}`} bind:value={ingredient.amount} placeholder="number" />
@@ -153,20 +157,16 @@
                   {ingredient.unit || 'Select unit'}
                 </Select.Trigger>
                 <Select.Content class="w-[180px]">
-                  <Select.Item value="grams">g (grams)</Select.Item>
-                  <Select.Item value="kilograms">kg (kilograms)</Select.Item>
-                  <Select.Item value="milliliters">ml (milliliters)</Select.Item>
-                  <Select.Item value="liters">l (liters)</Select.Item>
+                  <Select.Item value="gram">g (gram)</Select.Item>
+                  <Select.Item value="kilogram">kg (kilogram)</Select.Item>
+                  <Select.Item value="milliliter">ml (milliliter)</Select.Item>
+                  <Select.Item value="liter">l (liter)</Select.Item>
                   <Select.Item value="piece">piece</Select.Item>
                   <Select.Item value="teaspoon">tsp (teaspoon)</Select.Item>
                   <Select.Item value="tablespoon">tbsp (tablespoon)</Select.Item>
                   <Select.Item value="cup">cup (cup)</Select.Item>
                 </Select.Content>
               </Select.Root>
-            </div>
-            <div class="sm:w-3/4 w-2/4">
-              <Label class="pl-1" for={`ingredient_name-${ingredient.id}`}>Name</Label>
-              <Input type="text" id={`ingredient_name-${ingredient.id}`} bind:value={ingredient.name} placeholder="name" />
             </div>
             <Button variant="ghost" class="p-1 self-end" type="button" onclick={() => removeIngredient(ingredient.id)}><i class='bx bx-trash'></i></Button>
           </div>

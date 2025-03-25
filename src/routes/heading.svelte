@@ -11,10 +11,11 @@
 		<a class="text-xl content-center text-accent-foreground font-bold" href="/">Plate Pilot</a>
 		<div class="text-[10px]">Early Access</div>
 	</div>
-	<div>
-		<Button class="px-2 sm:px-4 font-bold" href="/saved_plates" variant="link">Saved Plates</Button>
-		<Button class="px-2 sm:px-4 font-bold" href="/add_plate" variant="link">Add Plate</Button>
-		<Button class="px-2 sm:px-4 font-bold" href="/my_shares" variant="link">My Shares</Button>
+	<div class="flex gap-2">
+		<Button class="px-2 sm:px-4 font-bold flex gap-1" href="/saved_plates" variant="link"><i class='bx bx-save sm:text-sm text-xl'></i><div class="sm:block hidden">Saved Plates</div></Button>
+		<Button class="px-2 sm:px-4 font-bold flex gap-1" href="/add_plate" variant="link"><i class='bx bxs-file-plus sm:text-sm text-xl'></i><div class="sm:block hidden">Add Plate</div></Button>
+		<Button class="px-2 sm:px-4 font-bold flex gap-1" href="/my_shares" variant="link"><i class='bx bx-share sm:text-sm text-xl'></i><div class="sm:block hidden">My Shares</div></Button>
+		<Button class="px-2 sm:px-4 font-bold flex gap-1" href="/tobuy" variant="link"><i class='bx bx-cart sm:text-sm text-xl'></i><div class="sm:block hidden">ToBuy</div></Button>
 	</div>
 	{#if data.user}
 		<form action="/?/logout" method="post" use:enhance>

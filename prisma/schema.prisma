@@ -18,6 +18,7 @@ model User {
   meals    Meal[]    @relation("UserMeals")
   schedule MealSchedule[]
   createdShares SharedMeal[] @relation("CreatorToSharedMeal")
+  tobuyList ToBuyList[]
 
   username String @unique
   password String
@@ -118,4 +119,27 @@ model SharedMeal {
   @@index([creator_id])
   @@index([meal_id])
   @@index([shareCode])
+}
+
+model ToBuyList {
+  id          String    @id @unique @default(uuid())
+  user        User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id     String
+  name        String
+  isDefault   Boolean   @default(false)
+  items       ToBuyItem[]
+
+  @@map("tobuy_list")
+}
+
+model ToBuyItem {
+  id           String       @id @unique @default(uuid())
+  list         ToBuyList @relation(fields: [list_id], references: [id], onDelete: Cascade)
+  list_id      String
+  name         String
+  amount       Float?
+  unit         String?
+  checked      Boolean      @default(false)
+
+  @@map("tobuy_item")
 }

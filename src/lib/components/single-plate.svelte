@@ -10,23 +10,19 @@
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import Skeleton from "./ui/skeleton/skeleton.svelte";
+  import AddToToBuyButton from "$lib/components/tobuy-button.svelte";
 
-  import type { Meal, ScheduledDate, MealSchedule } from "$lib/types";
-
-  // Props
   export let meal: any = null; 
   export let meals: any[] = [];
   export let fetchTodaysMeal = false;
   
-  // State variables
   let selectedDates: string[] = [];
-  let availableDates: string[] = [];
   let isLoading = false;
   let todaysMeals: any[] = [];
   let portionsMap = {};
   let originalMealsMap = {};
+  let loadingMeal = true;
 
-  // Generate dates for the next 20 days
   let dates = Array.from({ length: 20 }, (_, i) => {
     const dateTime = new Date();
     dateTime.setDate(dateTime.getDate() + i);
@@ -50,14 +46,13 @@
     if (!mealData || !mealData.id) return;
     
     const mealId = mealData.id;
+
+    loadingMeal = false;
     
-    // Store original meal for portion calculations
     originalMealsMap[mealId] = JSON.parse(JSON.stringify(mealData));
     
-    // Set initial portions
     portionsMap[mealId] = mealData.portions || 1;
     
-    // Process scheduled dates - only for single meal view
     if (meal && meal.id === mealId) {
       let mealDates = [];
       
@@ -87,7 +82,6 @@
       selectedDates = mealDates;
     }
     
-    // Update ingredients based on portions
     updateIngredientAmounts(mealData);
   }
 
@@ -95,6 +89,8 @@
     try {
       const response = await fetch("/api/meals/today");
       const data = await response.json();
+
+      loadingMeal = false;
       
       if (data.meals && Array.isArray(data.meals)) {
         todaysMeals = data.meals;
@@ -173,17 +169,18 @@
   };
 
   function updateIngredientAmounts(mealData) {
-    if (!mealData || !mealData.id) return mealData;
-    
-    const mealId = mealData.id;
-    const originalMeal = originalMealsMap[mealId];
-    
-    if (!originalMeal) return mealData;
-    
-    const currentPortions = portionsMap[mealId] || 1;
-    const originalPortions = originalMeal.portions || 1;
-    const multiplier = currentPortions / originalPortions;
-    
+  if (!mealData || !mealData.id) return mealData;
+  
+  const mealId = mealData.id;
+  const originalMeal = originalMealsMap[mealId];
+  
+  if (!originalMeal) return mealData;
+  
+  const currentPortions = portionsMap[mealId] || 1;
+  const originalPortions = originalMeal.portions || 1;
+  const multiplier = currentPortions / originalPortions;
+  
+  if (meal && meal.id === mealId) {
     const updatedMeal = JSON.parse(JSON.stringify(mealData));
     
     if (updatedMeal.ingredients && updatedMeal.ingredients.length > 0) {
@@ -205,12 +202,49 @@
       });
     }
     
+    meal = updatedMeal;
     return updatedMeal;
+  } 
+
+  else if (todaysMeals.length > 0) {
+    todaysMeals = todaysMeals.map(m => {
+      if (m.id !== mealId) return m;
+      
+      const updatedMeal = JSON.parse(JSON.stringify(m));
+      
+      if (updatedMeal.ingredients && updatedMeal.ingredients.length > 0) {
+        updatedMeal.ingredients = updatedMeal.ingredients.map(ingredient => {
+          const originalIngredient = originalMeal.ingredients.find(i => 
+            i.id === ingredient.id || 
+            (i.ingredient && i.ingredient.id === ingredient.ingredient?.id)
+          );
+          
+          if (!originalIngredient) return ingredient;
+          
+          const originalAmount = originalIngredient.amount;
+          const newAmount = parseFloat((originalAmount * multiplier).toFixed(2));
+          
+          return {
+            ...ingredient,
+            amount: newAmount
+          };
+        });
+      }
+      
+      return updatedMeal;
+    });
+    
+    return mealData;
   }
+  
+  return mealData;
+}
 
   function handlePortionChange(mealId, newPortions) {
     portionsMap[mealId] = newPortions;
     portionsMap = {...portionsMap};
+
+    console.log('Portions map:', portionsMap);
     
     if (meal && meal.id === mealId) {
       meal = updateIngredientAmounts(meal);
@@ -261,7 +295,6 @@
 <Toaster />
 
 {#if meal}
-  <!-- Single meal display -->
   <Card.Root class="mx-auto mb-4">
     <Card.Header class="p-2 pb-0 sm:p-6 sm:pb-0">
       <div class="flex gap-2 justify-between">
@@ -335,7 +368,7 @@
               name="portions" 
               min="1" 
               value={portionsMap[meal.id] || 1}
-              on:input={(e) => handlePortionChange(meal.id, parseInt(e.currentTarget.value) || 1)}
+              oninput={(e) => handlePortionChange(meal.id, parseInt(e.currentTarget.value) || 1)}
             />
           </div>
         </div>
@@ -343,6 +376,12 @@
         <div class="flex flex-col gap-2 px-2">
           {#each meal.ingredients as mealIngredient}
             <div class="flex justify-center sm:justify-start">
+              <AddToToBuyButton 
+                ingredientName={mealIngredient.ingredient.name}
+                amount={mealIngredient.amount}
+                unit={mealIngredient.ingredient.unit}
+                compact={true}
+              />
               {mealIngredient.amount} {mealIngredient.ingredient.unit} {mealIngredient.ingredient.name}
             </div>
           {/each}
@@ -380,147 +419,60 @@
       </div>
     </Card.Content>
   </Card.Root>
-  
-{:else if todaysMeals.length > 0 || meals.length > 0}
-  <!-- Multiple meals display -->
-  {#each (todaysMeals.length > 0 ? todaysMeals : meals) as currentMeal (currentMeal.id)}
-    <Card.Root class="mx-auto mb-4">
-      <Card.Header class="p-2 pb-0 sm:p-6 sm:pb-0">
-        <div class="flex gap-2 flex-wrap sm:justify-between">
-          <div class="flex gap-2">
-            <Card.Title class="content-center">{currentMeal.name}</Card.Title>
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger class="rounded-lg border px-3 py-2 text-sm font-medium flex items-center">
-                <i class='bx bx-info-circle content-center'></i>
-                <div class="content-center"><div class="hidden sm:block sm:pl-2">Time</div></div>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Content>
-                <DropdownMenu.Group>
-                  <DropdownMenu.Label>Total time: {formatTime(currentMeal.totalTime)}</DropdownMenu.Label>
-                  <DropdownMenu.Separator />
-                  <DropdownMenu.Item>Working time: {formatTime(currentMeal.workingTime)}</DropdownMenu.Item>
-                  <DropdownMenu.Item>Cooking time: {formatTime(currentMeal.cookingTime)}</DropdownMenu.Item>
-                  <DropdownMenu.Item>Rest time: {formatTime(currentMeal.restTime)}</DropdownMenu.Item>
-                </DropdownMenu.Group>
-              </DropdownMenu.Content>
-            </DropdownMenu.Root>
-          </div>
-          <div class="flex gap-2">
-            <Button variant="outline" class="content-center flex gap-1" on:click={() => shareMeal(currentMeal.id)}>
-              <i class='bx bx-share'></i><div class="hidden sm:block pl-1">Share</div>
-            </Button>
-            <Button variant="outline" class="content-center" href={`/plates/${currentMeal.id}/edit`}>
-              <i class='bx bx-edit-alt'></i><div class="hidden sm:block pl-1">Edit</div>
-            </Button>
-            <Button variant="outline" class="content-center" href={`/plates/${currentMeal.id}`}>
-              <i class='bx bx-calendar'></i><div class="hidden sm:block pl-1">Schedule</div>
-            </Button>
-          </div>
+{:else if loadingMeal}
+  <Card.Root class="mx-auto mb-4">
+    <Card.Header class="p-2 sm:p-6">
+      <div class="flex gap-2 justify-between">
+        <div class="flex gap-2 items-center">
+          <Skeleton class="h-10 w-24 rounded-lg" />
+          <Skeleton class="h-10 w-10 rounded-lg" />
         </div>
-      </Card.Header>
-      <Card.Content class="flex flex-col sm:flex-row gap-4">
-        <div class="flex flex-col gap-2 rounded-lg border p-2 sticky top-0 sm:w-fit w-full sm:items-start items-center z-40 bg-card">
-          <div class="text-sm font-medium flex justify-center sm:justify-start">
-            <div class="flex flex-row rounded-lg bg-secondary px-2 py-2 border w-fit items-center gap-1">
-              <Label for={`portions-${currentMeal.id}`}>Portions</Label>
-              <Input 
-                type="number" 
-                id={`portions-${currentMeal.id}`} 
-                name="portions" 
-                min="1" 
-                value={portionsMap[currentMeal.id] || 1}
-                on:input={(e) => handlePortionChange(currentMeal.id, parseInt(e.currentTarget.value) || 1)}
-              />
+        <Skeleton class="h-10 w-12 rounded-lg" />
+        <div class="flex gap-2">
+          <Skeleton class="h-10 w-12 rounded-lg" />
+          <Skeleton class="h-10 w-12 rounded-lg" />
+        </div>
+      </div>
+    </Card.Header>
+    <Card.Content class="flex flex-col sm:flex-row gap-4">
+      <div class="flex flex-col gap-2 rounded-lg border p-2 sticky top-0 sm:w-1/3 w-full">
+        <div class="text-sm font-medium w-full flex justify-center sm:justify-start">
+          <Skeleton class="h-10 w-48 rounded-lg" />
+        </div>
+        <div class="px-2 font-bold flex justify-center sm:justify-start">
+          <Skeleton class="h-6 w-24 rounded-lg" />
+        </div>
+        <div class="flex flex-col gap-2 px-2">
+          <Skeleton class="h-5 w-full rounded-lg" />
+          <Skeleton class="h-5 w-full rounded-lg" />
+          <Skeleton class="h-5 w-full rounded-lg" />
+          <Skeleton class="h-5 w-full rounded-lg" />
+          <Skeleton class="h-5 w-full rounded-lg" />
+        </div>
+      </div>
+      <div class="sm:w-2/3 w-full">
+        <div class="flex flex-col gap-4">
+          {#each Array(2) as _, i}
+            <div class="flex flex-col sm:flex-row gap-4">
+              <div class="sm:w-1/4 rounded-lg border p-2">
+                <div class="flex flex-col items-center gap-2">
+                  <Skeleton class="h-8 w-8 rounded-full" />
+                  <Skeleton class="h-6 w-32 rounded-lg" />
+                  <Skeleton class="h-4 w-24 rounded-lg" />
+                </div>
+              </div>
+              <div class="sm:w-3/4 rounded-lg border p-2">
+                <Skeleton class="h-20 w-full rounded-lg" />
+              </div>
             </div>
-          </div>
-          <div class="px-2 font-bold flex justify-center sm:justify-start">Ingredients</div>
-          <div class="flex flex-col gap-2 px-2">
-            {#each currentMeal.ingredients as mealIngredient}
-              <div class="flex justify-center sm:justify-start">
-                {mealIngredient.amount} {mealIngredient.ingredient.unit} {mealIngredient.ingredient.name}
-              </div>
-            {/each}
-          </div>
+          {/each}
         </div>
-        <ScrollArea class="min-h-[500px] h-fit w-full overflow-auto">
-          <div class="flex flex-col gap-4">
-            {#each currentMeal.steps || [] as step}
-              <div class="flex flex-col sm:flex-row gap-4">
-                <div class="sm:w-1/4 flex justify-center border rounded-lg p-2">
-                  <div class="flex flex-col items-center">
-                    <div class="w-8 h-8 flex items-center justify-center rounded-full bg-accent font-bold">
-                      {step.stepNumber}
-                    </div>
-                    <div class="text-center text-m">{step.text}</div>
-                    {#if step.extraText}
-                      <div class="text-sm text-gray-500">{step.extraText}</div>
-                    {/if}
-                  </div>
-                </div>
-                <div class="sm:w-3/4 border border-dashed rounded-lg p-2">
-                  <div class="flex px-2">{step.description || ''}</div>
-                </div>
-              </div>
-            {/each}
-          </div>
-        </ScrollArea>
-      </Card.Content>    
-    </Card.Root>
-  {/each}
-{:else if fetchTodaysMeal}
+      </div>
+    </Card.Content>
+  </Card.Root>
+{:else}
   <div class="flex flex-col items-center justify-center h-full pb-8">
     <p class="text-lg font-medium">No planned meals today</p>
     <Button variant="default" href="/saved_plates">Click here to add one</Button> 
   </div>
-{:else}
-<Card.Root class="mx-auto mb-4">
-  <Card.Header class="p-2 sm:p-6">
-    <div class="flex gap-2 justify-between">
-      <div class="flex gap-2 items-center">
-        <Skeleton class="h-10 w-24 rounded-lg" />
-        <Skeleton class="h-10 w-10 rounded-lg" />
-      </div>
-      <Skeleton class="h-10 w-12 rounded-lg" />
-      <div class="flex gap-2">
-        <Skeleton class="h-10 w-12 rounded-lg" />
-        <Skeleton class="h-10 w-12 rounded-lg" />
-      </div>
-    </div>
-  </Card.Header>
-  <Card.Content class="flex flex-col sm:flex-row gap-4">
-    <div class="flex flex-col gap-2 rounded-lg border p-2 sticky top-0 sm:w-1/3 w-full">
-      <div class="text-sm font-medium w-full flex justify-center sm:justify-start">
-        <Skeleton class="h-10 w-48 rounded-lg" />
-      </div>
-      <div class="px-2 font-bold flex justify-center sm:justify-start">
-        <Skeleton class="h-6 w-24 rounded-lg" />
-      </div>
-      <div class="flex flex-col gap-2 px-2">
-        <Skeleton class="h-5 w-full rounded-lg" />
-        <Skeleton class="h-5 w-full rounded-lg" />
-        <Skeleton class="h-5 w-full rounded-lg" />
-        <Skeleton class="h-5 w-full rounded-lg" />
-        <Skeleton class="h-5 w-full rounded-lg" />
-      </div>
-    </div>
-    <div class="sm:w-2/3 w-full">
-      <div class="flex flex-col gap-4">
-        {#each Array(2) as _, i}
-          <div class="flex flex-col sm:flex-row gap-4">
-            <div class="sm:w-1/4 rounded-lg border p-2">
-              <div class="flex flex-col items-center gap-2">
-                <Skeleton class="h-8 w-8 rounded-full" />
-                <Skeleton class="h-6 w-32 rounded-lg" />
-                <Skeleton class="h-4 w-24 rounded-lg" />
-              </div>
-            </div>
-            <div class="sm:w-3/4 rounded-lg border p-2">
-              <Skeleton class="h-20 w-full rounded-lg" />
-            </div>
-          </div>
-        {/each}
-      </div>
-    </div>
-  </Card.Content>
-</Card.Root>
 {/if}

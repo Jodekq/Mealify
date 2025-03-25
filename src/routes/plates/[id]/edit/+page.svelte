@@ -208,12 +208,14 @@ async function handleSubmit() {
               <!-- look at code of select hing at svelte shadcn website they did it with bind:value -->
               <Label class="pl-1" for={`unit-${ingredient.id}`}>Unit</Label> 
               <Select.Root onSelectedChange={(selected) => selectUnit(ingredient.id, selected)}>
-                <Select.Trigger class="w-[180px]">{ingredient.unit || 'Select unit'}</Select.Trigger>
+                <Select.Trigger>
+                  {ingredient.unit || 'Select unit'}
+                </Select.Trigger>
                 <Select.Content>
-                  <Select.Item value="grams">g (grams)</Select.Item>
-                  <Select.Item value="kilograms">kg (kilograms)</Select.Item>
-                  <Select.Item value="milliliters">ml (milliliters)</Select.Item>
-                  <Select.Item value="liters">l (liters)</Select.Item>
+                  <Select.Item value="gram">g (gram)</Select.Item>
+                  <Select.Item value="kilogram">kg (kilogram)</Select.Item>
+                  <Select.Item value="milliliter">ml (milliliter)</Select.Item>
+                  <Select.Item value="liter">l (liter)</Select.Item>
                   <Select.Item value="piece">piece</Select.Item>
                   <Select.Item value="teaspoon">tsp (teaspoon)</Select.Item>
                   <Select.Item value="tablespoon">tbsp (tablespoon)</Select.Item>
