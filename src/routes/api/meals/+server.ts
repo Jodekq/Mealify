@@ -92,6 +92,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
               unit: ing.unit || ""
             }
           });
+        } else {
+          ingredient = await prisma.ingredient.update({
+            where: { id: ingredient.id },
+            data: { unit: ing.unit || "" }
+          });
         }
         
         await prisma.mealIngredient.create({
