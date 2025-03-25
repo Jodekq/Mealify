@@ -77,7 +77,7 @@ model MealIngredient {
 
 model Ingredient {
   id   String  @id @unique @default(uuid())
-  name String  @unique
+  name String
   unit String? 
   meals MealIngredient[]
 }

@@ -81,8 +81,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     
     if (ingredients && ingredients.length > 0) {
       for (const ing of ingredients) {
-        let ingredient = await prisma.ingredient.findUnique({
-          where: { name: ing.name }
+        let ingredient = await prisma.ingredient.findFirst({ 
+          where: { 
+            name: ing.name, 
+            unit: ing.unit || "" 
+          } 
         });
         
         if (!ingredient) {
@@ -91,11 +94,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
               name: ing.name,
               unit: ing.unit || ""
             }
-          });
-        } else {
-          ingredient = await prisma.ingredient.update({
-            where: { id: ingredient.id },
-            data: { unit: ing.unit || "" }
           });
         }
         

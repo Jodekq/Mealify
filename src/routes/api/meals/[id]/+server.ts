@@ -24,6 +24,31 @@ export async function PUT({ params, request }) {
                       (parseInt(data.cookingTime) || 0) + 
                       (parseInt(data.restTime) || 0);
     
+    const ingredientPromises = data.ingredients.map(async (ing) => {
+      let ingredient = await prisma.ingredient.findFirst({
+        where: { 
+          name: ing.name,
+          unit: ing.unit || ""
+        }
+      });
+      
+      if (!ingredient) {
+        ingredient = await prisma.ingredient.create({
+          data: {
+            name: ing.name,
+            unit: ing.unit || ""
+          }
+        });
+      }
+      
+      return {
+        amount: ing.amount === "" || ing.amount === undefined ? null : parseFloat(ing.amount),
+        ingredientId: ingredient.id
+      };
+    });
+    
+    const ingredientData = await Promise.all(ingredientPromises);
+    
     const updatedMeal = await prisma.meal.update({
       where: { id },
       data: {
@@ -35,26 +60,12 @@ export async function PUT({ params, request }) {
         portions: parseInt(data.portions) || 1,
         ingredients: {
           deleteMany: {},
-          create: data.ingredients.map((ing) => {
-            const amount = ing.amount !== undefined && ing.amount !== '' 
-              ? parseFloat(ing.amount) 
-              : 0;
-            
-            const unit = ing.unit !== undefined ? ing.unit : "";
-              
-            return {
-              amount: amount,
-              ingredient: {
-                connectOrCreate: {
-                  where: { name: ing.name },
-                  create: {
-                    name: ing.name,
-                    unit: unit,
-                  }
-                }
-              }
-            };
-          }),
+          create: ingredientData.map(item => ({
+            amount: item.amount,
+            ingredient: {
+              connect: { id: item.ingredientId }
+            }
+          }))
         },
         steps: {
           deleteMany: {}, 
