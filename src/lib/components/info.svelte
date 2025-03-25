@@ -3,9 +3,9 @@
 
   let upcomingFeatures = [
     { title: "Meal Sharing", description: "Easily share your meals with friends", progress: 100 },
-    { title: "ToBuy List", description: "Keep track of what you need to buy", progress: 90 },
+    { title: "ToBuy List", description: "Keep track of what you need to buy", progress: 100 },
     { title: "Families", description: "Organize meals for your family", progress: 5 },
-    { title: "Schedule Plates", description: "for specific days of the week (e.g. monday)", progress: 0 },
+    { title: "Routines", description: "Schedule anything for specific days of the week", progress: 20 },
     { title: "Export / Share Calendar", description: "Share your clandar with others or import it into your own calendar", progress: 0 },
     { title: "Import meals", description: "Import meals from other sources", progress: 5 },
     { title: "Search saved plates", description: "Search for specific saved plates", progress: 10 },
