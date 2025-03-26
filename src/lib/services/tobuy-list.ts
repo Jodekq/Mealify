@@ -1,4 +1,4 @@
-// src/lib/server/shoppingListService.ts
+// src/lib/server/tobuy-list.ts
 import prisma from '$lib/prismaClient';
 
 export async function ensureDefaultList(userId: string): Promise<string> {

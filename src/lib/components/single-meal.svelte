@@ -48,7 +48,6 @@
     
     const mealId = mealData.id;
     
-    // Only initialize if not already done to prevent overwriting
     if (!originalMealsMap[mealId]) {
       originalMealsMap[mealId] = JSON.parse(JSON.stringify(mealData));
       portionsMap[mealId] = mealData.portions || 1;

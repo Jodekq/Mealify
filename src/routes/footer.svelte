@@ -7,7 +7,7 @@
 		<nav class="flex flex-row justify-between sm:w-1/2 w-full">
 			<div class="flex flex-col gap-20">
 				<div>
-					<div class="text-xl font-bold">Plate Pilot</div>
+					<div class="text-xl font-bold">Mealify</div>
 					<div>Manage what you eat.</div>
 				</div>
 				<div>Made with &lt3 by @jodek</div>
