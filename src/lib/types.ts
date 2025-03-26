@@ -10,7 +10,7 @@ export type User = {
 export type Ingredient = {
   id: string;
   name: string;
-  unit: string;
+  unit?: string | null;
   meals?: MealIngredient[];
 };
 
@@ -19,7 +19,7 @@ export type MealIngredient = {
   meal_id: string;
   ingredient_id: string;
   ingredient: Ingredient;
-  amount: number;
+  amount?: number | null;
 };
 
 export type MealStep = {

@@ -46,8 +46,6 @@
     if (!mealData || !mealData.id) return;
     
     const mealId = mealData.id;
-
-    loadingMeal = false;
     
     originalMealsMap[mealId] = JSON.parse(JSON.stringify(mealData));
     

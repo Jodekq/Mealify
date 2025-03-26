@@ -4,8 +4,8 @@ import type { Handle } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
 
 const ipRequests = new Map<string, { count: number; timestamp: number }>();
-const RATE_LIMIT = 100; // requests per minute
-const RATE_WINDOW = 60 * 1000; // 1 minute in milliseconds
+const RATE_LIMIT = 100;
+const RATE_WINDOW = 60 * 1000; 
 
 const rateLimit = async (ip: string): Promise<boolean> => {
   const now = Date.now();
@@ -18,13 +18,12 @@ const rateLimit = async (ip: string): Promise<boolean> => {
   
   record.count += 1;
   if (record.count > RATE_LIMIT) {
-    return true; // rate limited
+    return true;
   }
   
   return false;
 };
 
-// HTTPS enforcement
 const enforceHttps: Handle = async ({ event, resolve }) => {
   if (
     event.request.headers.get("x-forwarded-proto") !== "https" && 
@@ -41,11 +40,9 @@ const enforceHttps: Handle = async ({ event, resolve }) => {
   return await resolve(event);
 };
 
-// Rate limiting middleware
 const rateLimitMiddleware: Handle = async ({ event, resolve }) => {
   const ip = event.getClientAddress();
   
-  // Skip rate limiting for certain paths if needed
   if (event.url.pathname.startsWith("/public") || event.locals.session) {
     return await resolve(event);
   }
@@ -58,7 +55,6 @@ const rateLimitMiddleware: Handle = async ({ event, resolve }) => {
   return await resolve(event);
 };
 
-// Auth middleware (your existing code)
 const authMiddleware: Handle = async ({ event, resolve }) => {
   const sessionId = event.cookies.get(lucia.sessionCookieName);
   
@@ -96,23 +92,19 @@ const authMiddleware: Handle = async ({ event, resolve }) => {
   return resolve(event);
 };
 
-
-// Security headers middleware
 const securityHeaders: Handle = async ({ event, resolve }) => {
   const response = await resolve(event);
   
-  // Add security headers
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), clipboard-write=(self)");
   
-  // Updated Content Security Policy - allowing BoxIcons
   const cspDirectives = [
     "default-src 'self'",
     "img-src 'self' data: blob:",
-    "style-src 'self' 'unsafe-inline' https://unpkg.com", // Added unpkg.com for BoxIcons
-    "font-src 'self' https://unpkg.com", // Added for BoxIcons fonts
+    "style-src 'self' 'unsafe-inline' https://unpkg.com",
+    "font-src 'self' https://unpkg.com",
     "script-src 'self' 'unsafe-inline'",
     "connect-src 'self' https://api.supabase.co",
     "frame-ancestors 'none'",
@@ -122,12 +114,9 @@ const securityHeaders: Handle = async ({ event, resolve }) => {
   
   response.headers.set("Content-Security-Policy", cspDirectives);
   
-  // HSTS header remains the same...
-  
   return response;
 };
 
-// Combine all middleware with sequence
 export const handle = sequence(
   enforceHttps,
   rateLimitMiddleware,

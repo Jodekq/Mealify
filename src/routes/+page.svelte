@@ -1,6 +1,6 @@
 <!-- src/routes/+page.svelte -->
 <script lang="ts">
-  import MultiplePlates from "$lib/components/multiple-plates.svelte";
+  import MultiplePlates from "$lib/components/multiple-meals.svelte";
   import Calendar from "$lib/components/calendar.svelte";
   import Info from "$lib/components/info.svelte";
   import { onMount } from "svelte";
@@ -29,7 +29,7 @@
 <Toaster />
 
 <main class="sm:container mt-4 mx-auto px-2">
-  <MultiplePlates meals={todaysMeals}/>
+  <MultiplePlates meals={todaysMeals} {isLoading} />
   <Calendar />
   <Info />
 </main>

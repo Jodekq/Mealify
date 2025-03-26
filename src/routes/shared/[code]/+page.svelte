@@ -11,7 +11,6 @@
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
 
-  // Define the structure of the page data
   type PageData = {
     meal?: Meal;
     creator?: { 
@@ -32,7 +31,6 @@
   let creatorUsername = data.creator?.username || "Unknown";
   let isAuthenticated = data.user !== null;
   let isImporting = false;
-  let isCreator = data.user?.id === data.creator?.id;
 
   let ogDescription = "";
   
@@ -123,16 +121,15 @@
               <i class='bx bx-user'></i>
               <span>Shared by: <span class="font-medium">{creatorUsername}</span></span>
             </div>
-            {#if !isCreator}
-              <Button onclick={importMeal} disabled={isImporting} variant="default">
-                {isImporting ? 'Importing...' : 'Import'}
-              </Button>
-            {/if}
+            <Button onclick={importMeal} disabled={isImporting} variant="default" class="flex gap-1">
+              <i class='bx bx-import'></i>
+              <div class="hidden sm:block">{isImporting ? 'Importing...' : 'Import'}</div>
+            </Button>
           </div>
         </div>
       </Card.Header>
       <Card.Content class="flex flex-col sm:flex-row gap-4">
-        <div class="flex flex-col gap-2 rounded-lg border p-2 sticky top-0 w-fit sm:items-start items-center">
+        <div class="flex flex-col gap-2 rounded-lg border p-2 w-fit sm:items-start items-center">
           <div class="text-sm font-medium flex justify-center sm:justify-start">
             <div class="flex flex-row rounded-lg bg-secondary px-2 py-2 border w-fit items-center gap-1">
               <Label for="portions">Portions</Label>

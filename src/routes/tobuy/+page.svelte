@@ -272,20 +272,20 @@
 <Toaster />
 
 <div class="mt-4 mx-auto px-2 sm:container">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold">My ToBuy Lists</h1>
-    
-    <div class="flex items-center gap-2">
+  <div class="flex flex-col gap-4 items-center mb-6">
+    <div class="text-xl font-bold">My ToBuy Lists</div>
+    <div class="flex items-center gap-2 w-full">
       <Input 
         type="text" 
         placeholder="New list name" 
         bind:value={newListName} 
-        class="max-w-[200px]"
+        class="w-3/4"
       />
       <Button 
         variant="default" 
         disabled={isCreatingList} 
         on:click={createList}
+        class="w-1/4"
       >
         <i class='bx bx-plus mr-1'></i> New List
       </Button>
@@ -306,7 +306,7 @@
     <div class="space-y-8">
       {#each lists as list}
         <Card.Root>
-          <Card.Header class="flex flex-row items-center justify-between sm:p-6 p-4">
+          <Card.Header class="flex flex-row items-center justify-between sm:p-6 p-2 sm:pb-0">
             <div>
               <Card.Title class="text-xl flex items-center gap-2">
                 {list.name}
@@ -361,11 +361,10 @@
             </div>
           </Card.Header>
           
-          <Card.Content class="sm:p-6 p-4">
-            <!-- Add new item form -->
-            <div class="mb-4 p-3 border rounded-md bg-muted/40" class:border-accent={activeListId === list.id}>
+          <Card.Content class="sm:p-6 p-2">
+            <div class="mb-2 p-2 border rounded-md bg-muted/40" class:border-accent={activeListId === list.id}>
               <div class="flex gap-2">
-                <div class="sm:w-3/4 w-2/4">
+                <div class="w-3/5">
                   <Label for={`item-name-${list.id}`} class="pl-1">Item</Label>
                   <Input 
                     id={`item-name-${list.id}`}
@@ -375,7 +374,7 @@
                     on:focus={() => setActiveList(list.id)}
                   />
                 </div>
-                <div class="w-1/4">
+                <div class="w-1/5">
                   <Label for={`item-amount-${list.id}`}>Amount</Label>
                   <Input 
                     class="pl-1"
@@ -386,7 +385,7 @@
                     on:focus={() => setActiveList(list.id)}
                   />
                 </div>
-                <div class="sm:w-1/4 w-2/4">
+                <div class="w-1/5">
                   <Label for={`item-unit-${list.id}`}>Unit</Label>
                   <Select.Root onSelectedChange={(selected) => selectUnit(list.id, selected)}>
                     <Select.Trigger class="w-full" id={`item-unit-${list.id}`} onfocus={() => setActiveList(list.id)}>

@@ -8,7 +8,8 @@
     { title: "Routines", description: "Schedule anything for specific days of the week", progress: 20 },
     { title: "Export / Share Calendar", description: "Share your clandar with others or import it into your own calendar", progress: 0 },
     { title: "Import meals", description: "Import meals from other sources", progress: 5 },
-    { title: "Search saved plates", description: "Search for specific saved plates", progress: 10 },
+    { title: "Categories", description: "Select categories for meals", progress: 25 },
+    { title: "Search saved plates", description: "Search for specific saved plates", progress: 35 },
   ];
 </script>
 
