@@ -27,12 +27,54 @@
   export let data: PageData;
   
   let meal = data.meal;
-  let portions = meal?.portions || 1; 
+  let portionsMap = {};
+  let originalMealsMap = {};
   let creatorUsername = data.creator?.username || "Unknown";
   let isAuthenticated = data.user !== null;
   let isImporting = false;
 
   let ogDescription = "";
+  
+  onMount(() => {
+    if (meal) {
+      initializeMeal(meal);
+    }
+  });
+
+  function initializeMeal(mealData: Meal) {
+    if (!mealData || !mealData.id) return;
+    
+    const mealId = mealData.id;
+    
+    if (!originalMealsMap[mealId]) {
+      originalMealsMap[mealId] = JSON.parse(JSON.stringify(mealData));
+      portionsMap[mealId] = mealData.portions || 1;
+    }
+  }
+
+  function handlePortionChange(mealId: string, newPortions: number | string) {
+    newPortions = Math.max(1, parseInt(newPortions as string) || 1);
+    
+    portionsMap[mealId] = newPortions;
+    
+    if (!meal || meal.id !== mealId) return;
+    
+    const originalMeal = originalMealsMap[mealId];
+    if (!originalMeal || !originalMeal.ingredients) return;
+    
+    meal.ingredients.forEach((ing, index) => {
+      const originalIngredient = originalMeal.ingredients[index];
+      if (originalIngredient && originalIngredient.amount) {
+
+        const originalPortions = originalMeal.portions || 1;
+        const multiplier = newPortions / originalPortions;
+        
+        ing.amount = parseFloat((originalIngredient.amount * multiplier).toFixed(2));
+      }
+    });
+    
+    meal = {...meal};
+  }
   
   if (meal) {
     const ingredientList = meal.ingredients
@@ -97,8 +139,8 @@
   {#if meal}
     <Card.Root class="mx-auto mb-4">
       <Card.Header class="p-2 pb-0 sm:p-6 sm:pb-0">
-        <div class="flex flex-col sm:flex-row justify-between gap-2">
-          <div class="flex flex-row gap-4">
+        <div class="flex flex-row justify-between gap-2">
+          <div class="flex flex-row gap-4 items-center">
             <Card.Title class="content-center">{meal.name}</Card.Title>
             <DropdownMenu.Root>
               <DropdownMenu.Trigger class="rounded-lg border px-3 text-sm font-medium flex items-center h-10">
@@ -116,7 +158,7 @@
               </DropdownMenu.Content>
             </DropdownMenu.Root>
           </div>
-          <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+          <div class="flex flex-row items-center gap-2">
             <div class="text-sm mr-0 sm:mr-4 flex items-center gap-1">
               <i class='bx bx-user'></i>
               <span>Shared by: <span class="font-medium">{creatorUsername}</span></span>
@@ -129,23 +171,36 @@
         </div>
       </Card.Header>
       <Card.Content class="flex flex-col sm:flex-row gap-4">
-        <div class="flex flex-col gap-2 rounded-lg border p-2 w-fit sm:items-start items-center">
+        <div class="flex flex-col gap-2 rounded-lg border p-2 w-full sm:w-fit sm:items-start items-center z-40 bg-card">
           <div class="text-sm font-medium flex justify-center sm:justify-start">
             <div class="flex flex-row rounded-lg bg-secondary px-2 py-2 border w-fit items-center gap-1">
-              <Label for="portions">Portions</Label>
-              <Input type="number" id="portions" name="portions" min="1" bind:value={portions}/>
+              <Label for={`portions-${meal.id}`}>Portions</Label>
+              <Input 
+                type="number" 
+                id={`portions-${meal.id}`} 
+                name="portions" 
+                min="1" 
+                value={portionsMap[meal.id] || 1}
+                oninput={(e) => handlePortionChange(meal.id, parseInt(e.currentTarget.value) || 1)}
+              />
             </div>
           </div>
           <div class="px-2 font-bold flex justify-center sm:justify-start">Ingredients</div>
           <div class="flex flex-col gap-2 px-2">
             {#each meal.ingredients as mealIngredient}
               <div class="flex justify-center sm:justify-start">
-                {(mealIngredient.amount * (portions / meal.portions))} {mealIngredient.ingredient.unit} {mealIngredient.ingredient.name}
+                {#if mealIngredient.amount}
+                  {mealIngredient.amount} 
+                {/if}
+                {#if mealIngredient.ingredient.unit}
+                  {mealIngredient.ingredient.unit} 
+                {/if}
+                {mealIngredient.ingredient.name}
               </div>
             {/each}
           </div>
         </div>
-        <ScrollArea class="min-h-[500px] h-fit w-full overflow-auto">
+        <ScrollArea class="h-fit w-full overflow-auto">
           <div class="flex flex-col gap-4">
             {#each meal.steps || [] as step}
               <div class="flex flex-col sm:flex-row gap-4">

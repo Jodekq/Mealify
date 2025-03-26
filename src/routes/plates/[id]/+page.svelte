@@ -1,6 +1,6 @@
 <!-- src/routes/plates/[id]/+page.svelte -->
 <script lang="ts">
-  import SinglePlate from "$lib/components/single-plate.svelte";
+  import SinglePlate from "$lib/components/single-meal.svelte";
   import { Toaster } from "svelte-sonner";
 
   export let data;

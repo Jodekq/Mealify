@@ -1,3 +1,4 @@
+<!-- src/lib/components/single-meal.svelte -->
 <script lang="ts">
   import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button/index.js";
@@ -47,9 +48,11 @@
     
     const mealId = mealData.id;
     
-    originalMealsMap[mealId] = JSON.parse(JSON.stringify(mealData));
-    
-    portionsMap[mealId] = mealData.portions || 1;
+    // Only initialize if not already done to prevent overwriting
+    if (!originalMealsMap[mealId]) {
+      originalMealsMap[mealId] = JSON.parse(JSON.stringify(mealData));
+      portionsMap[mealId] = mealData.portions || 1;
+    }
     
     if (meal && meal.id === mealId) {
       let mealDates = [];
@@ -79,8 +82,45 @@
       
       selectedDates = mealDates;
     }
+  }
+
+  function handlePortionChange(mealId, newPortions) {
+    newPortions = Math.max(1, parseInt(newPortions) || 1);
     
-    updateIngredientAmounts(mealData);
+    portionsMap[mealId] = newPortions;
+    
+    let mealToUpdate;
+    
+    if (meal && meal.id === mealId) {
+      mealToUpdate = meal;
+    } else {
+      mealToUpdate = todaysMeals.find(m => m.id === mealId) || 
+                     meals.find(m => m.id === mealId);
+    }
+    
+    if (!mealToUpdate) return;
+    
+    const originalMeal = originalMealsMap[mealId];
+    if (!originalMeal || !originalMeal.ingredients) return;
+    
+    mealToUpdate.ingredients.forEach((ing, index) => {
+      const originalIngredient = originalMeal.ingredients[index];
+      if (originalIngredient && originalIngredient.amount) {
+
+        const originalPortions = originalMeal.portions || 1;
+        const multiplier = newPortions / originalPortions;
+        
+        ing.amount = parseFloat((originalIngredient.amount * multiplier).toFixed(2));
+      }
+    });
+    
+    if (meal && meal.id === mealId) {
+      meal = {...meal};
+    } else if (todaysMeals.some(m => m.id === mealId)) {
+      todaysMeals = [...todaysMeals];
+    } else if (meals.some(m => m.id === mealId)) {
+      meals = [...meals];
+    }
   }
 
   async function fetchTodayMeals() {
@@ -165,94 +205,6 @@
     const mins = minutes % 60;
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
-
-  function updateIngredientAmounts(mealData) {
-  if (!mealData || !mealData.id) return mealData;
-  
-  const mealId = mealData.id;
-  const originalMeal = originalMealsMap[mealId];
-  
-  if (!originalMeal) return mealData;
-  
-  const currentPortions = portionsMap[mealId] || 1;
-  const originalPortions = originalMeal.portions || 1;
-  const multiplier = currentPortions / originalPortions;
-  
-  if (meal && meal.id === mealId) {
-    const updatedMeal = JSON.parse(JSON.stringify(mealData));
-    
-    if (updatedMeal.ingredients && updatedMeal.ingredients.length > 0) {
-      updatedMeal.ingredients = updatedMeal.ingredients.map(ingredient => {
-        const originalIngredient = originalMeal.ingredients.find(i => 
-          i.id === ingredient.id || 
-          (i.ingredient && i.ingredient.id === ingredient.ingredient?.id)
-        );
-        
-        if (!originalIngredient) return ingredient;
-        
-        const originalAmount = originalIngredient.amount;
-        const newAmount = parseFloat((originalAmount * multiplier).toFixed(2));
-        
-        return {
-          ...ingredient,
-          amount: newAmount
-        };
-      });
-    }
-    
-    meal = updatedMeal;
-    return updatedMeal;
-  } 
-
-  else if (todaysMeals.length > 0) {
-    todaysMeals = todaysMeals.map(m => {
-      if (m.id !== mealId) return m;
-      
-      const updatedMeal = JSON.parse(JSON.stringify(m));
-      
-      if (updatedMeal.ingredients && updatedMeal.ingredients.length > 0) {
-        updatedMeal.ingredients = updatedMeal.ingredients.map(ingredient => {
-          const originalIngredient = originalMeal.ingredients.find(i => 
-            i.id === ingredient.id || 
-            (i.ingredient && i.ingredient.id === ingredient.ingredient?.id)
-          );
-          
-          if (!originalIngredient) return ingredient;
-          
-          const originalAmount = originalIngredient.amount;
-          const newAmount = parseFloat((originalAmount * multiplier).toFixed(2));
-          
-          return {
-            ...ingredient,
-            amount: newAmount
-          };
-        });
-      }
-      
-      return updatedMeal;
-    });
-    
-    return mealData;
-  }
-  
-  return mealData;
-}
-
-  function handlePortionChange(mealId, newPortions) {
-    portionsMap[mealId] = newPortions;
-    portionsMap = {...portionsMap};
-
-    console.log('Portions map:', portionsMap);
-    
-    if (meal && meal.id === mealId) {
-      meal = updateIngredientAmounts(meal);
-    } 
-    else if (todaysMeals.length > 0) {
-      todaysMeals = todaysMeals.map(m => 
-        m.id === mealId ? updateIngredientAmounts(m) : m
-      );
-    }
-  }
 
   async function shareMeal(mealId) {
     if (!mealId) return;
