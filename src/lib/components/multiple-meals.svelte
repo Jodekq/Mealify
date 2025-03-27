@@ -248,9 +248,11 @@
                     {/if}
                   </div>
                 </div>
-                <div class="sm:w-3/4 border border-dashed rounded-lg p-2">
-                  <div class="flex px-2">{step.description || ''}</div>
-                </div>
+                {#if step.description}
+                  <div class="sm:w-3/4 border border-dashed rounded-lg p-2">
+                    <div class="flex px-2">{step.description || ''}</div>
+                  </div>
+                {/if}
               </div>
             {/each}
           </div>

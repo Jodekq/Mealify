@@ -364,7 +364,7 @@
           <Card.Content class="sm:p-6 p-2">
             <div class="mb-2 p-2 border rounded-md bg-muted/40" class:border-accent={activeListId === list.id}>
               <div class="flex gap-2">
-                <div class="w-3/5">
+                <div class="w-full">
                   <Label for={`item-name-${list.id}`} class="pl-1">Item</Label>
                   <Input 
                     id={`item-name-${list.id}`}
@@ -374,7 +374,7 @@
                     on:focus={() => setActiveList(list.id)}
                   />
                 </div>
-                <div class="w-1/5">
+                <!-- <div class="w-1/5">
                   <Label for={`item-amount-${list.id}`}>Amount</Label>
                   <Input 
                     class="pl-1"
@@ -402,13 +402,13 @@
                       <Select.Item value="cup">cup (cup)</Select.Item>
                     </Select.Content>
                   </Select.Root>
-                </div>
-                <div class="flex items-end gap-1">
+                </div> -->
+                <div class="flex items-end">
                   <Button 
                     variant="default" 
                     disabled={!listInputs[list.id].name?.trim() || activeListId !== list.id} 
                     on:click={() => addItem(list.id)}
-                    class="h-10"
+                    class="h-10 flex gap-2"
                   >
                     <i class='bx bx-plus'></i>
                     <div class="sm:block hidden">Add</div>

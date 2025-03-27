@@ -8,6 +8,7 @@
   import * as Select from "$lib/components/ui/select";
   import { Textarea } from "$lib/components/ui/textarea/index.js";
   import { toast } from "svelte-sonner";
+  import { dndzone } from "svelte-dnd-action";
   
   let name = '';
   let portions = 1;
@@ -16,7 +17,6 @@
   let restTime = 0;
   let isSubmitting = false;
   let errorMessage = '';
-  let successMessage = '';
   
   async function handleSubmit() {
     try {
@@ -106,6 +106,30 @@
       number: index + 1
     }));
   }
+
+  function handleIngredientDndConsider(e) {
+    ingredients = e.detail.items;
+  }
+
+  function handleIngredientDndFinalize(e) {
+    ingredients = e.detail.items;
+  }
+
+  function handleStepDndConsider(e) {
+    const updatedSteps = e.detail.items;
+    steps = updatedSteps.map((step, index) => ({
+      ...step,
+      number: index + 1
+    }));
+  }
+
+  function handleStepDndFinalize(e) {
+    const updatedSteps = e.detail.items;
+    steps = updatedSteps.map((step, index) => ({
+      ...step,
+      number: index + 1
+    }));
+  }
 </script>
 
 <div class="mt-4 mx-auto px-2 sm:container">
@@ -145,46 +169,69 @@
         <div class="border p-2 rounded-lg">
           <div class="text-lg font-medium pb-2">Ingredients</div>
           <Button variant="outline" class="content-center mb-4" type="button" onclick={addIngredient}><i class='bx bx-plus'></i> Add Ingredient</Button>
-          {#each ingredients as ingredient (ingredient.id)}
-          <div class="flex gap-2">
-            <div class="sm:w-3/4 w-2/4">
-              <Label class="pl-1" for={`ingredient_name-${ingredient.id}`}>Name</Label>
-              <Input type="text" id={`ingredient_name-${ingredient.id}`} bind:value={ingredient.name} placeholder="name" />
-            </div>
-            <div class="w-1/4">
-              <Label class="pl-1" for={`amount-${ingredient.id}`}>Amount</Label>
-              <Input type="number" id={`amount-${ingredient.id}`} bind:value={ingredient.amount} placeholder="number" />
-            </div>
-            <div class="sm:w-1/4 w-2/4">
-              <Label class="pl-1" for={`unit-${ingredient.id}`}>Unit</Label>
-              <Select.Root onSelectedChange={(selected) => selectUnit(ingredient.id, selected)}>
-                <Select.Trigger>
-                  {ingredient.unit || 'Select unit'}
-                </Select.Trigger>
-                <Select.Content class="w-[180px]">
-                  <Select.Item value="">none</Select.Item>
-                  <Select.Item value="g">g</Select.Item>
-                  <Select.Item value="kg">kg</Select.Item>
-                  <Select.Item value="ml">ml</Select.Item>
-                  <Select.Item value="L">L</Select.Item>
-                  <Select.Item value="piece">piece</Select.Item>
-                  <Select.Item value="TL">TL</Select.Item>
-                  <Select.Item value="EL">EL</Select.Item>
-                  <Select.Item value="tsp">tsp</Select.Item>
-                  <Select.Item value="tbsp">tbsp</Select.Item>
-                  <Select.Item value="cup">cup</Select.Item>
-                </Select.Content>
-              </Select.Root>
-            </div>
-            <Button variant="ghost" class="p-1 self-end" type="button" onclick={() => removeIngredient(ingredient.id)}><i class='bx bx-trash'></i></Button>
+          <div 
+              use:dndzone={{items: ingredients, flipDurationMs: 150, type: "ingredients"}}
+              on:consider={handleIngredientDndConsider}
+              on:finalize={handleIngredientDndFinalize}
+              class="pb-2"
+            >
+            {#each ingredients as ingredient (ingredient.id)}
+              <div class="flex gap-2 pt-2 w-full">
+                <div class="flex items-center">
+                  <div class="drag-handle cursor-move flex flex-col items-center mb-1">
+                    <i class='bx bx-dots-vertical-rounded'></i>
+                  </div>
+                </div>
+                <div class="sm:w-3/4 w-2/4">
+                  <Label class="pl-1" for={`ingredient_name-${ingredient.id}`}>Name</Label>
+                  <Input type="text" id={`ingredient_name-${ingredient.id}`} bind:value={ingredient.name} placeholder="name" />
+                </div>
+                <div class="w-1/4">
+                  <Label class="pl-1" for={`amount-${ingredient.id}`}>Amount</Label>
+                  <Input type="number" id={`amount-${ingredient.id}`} bind:value={ingredient.amount} placeholder="number" />
+                </div>
+                <div class="sm:w-1/4 w-2/4">
+                  <Label class="pl-1" for={`unit-${ingredient.id}`}>Unit</Label> 
+                  <Select.Root onSelectedChange={(selected) => selectUnit(ingredient.id, selected)}>
+                    <Select.Trigger>
+                      {ingredient.unit || 'Select unit'}
+                    </Select.Trigger>
+                    <Select.Content>
+                      <Select.Item value="">none</Select.Item>
+                      <Select.Item value="g">g</Select.Item>
+                      <Select.Item value="kg">kg</Select.Item>
+                      <Select.Item value="ml">ml</Select.Item>
+                      <Select.Item value="L">L</Select.Item>
+                      <Select.Item value="piece">piece</Select.Item>
+                      <Select.Item value="TL">TL</Select.Item>
+                      <Select.Item value="EL">EL</Select.Item>
+                      <Select.Item value="tsp">tsp</Select.Item>
+                      <Select.Item value="tbsp">tbsp</Select.Item>
+                      <Select.Item value="cup">cup</Select.Item>
+                    </Select.Content>
+                  </Select.Root>
+                </div>
+                <Button variant="ghost" class="p-1 self-end" type="button" onclick={() => removeIngredient(ingredient.id)}><i class='bx bx-trash'></i></Button>
+              </div>
+              {/each}
           </div>
-          {/each}
         </div>
         <div class="border rounded-lg p-2">
           <div class="text-lg font-medium pb-2">Description</div>
           <Button variant="outline" class="content-center mb-4" type="button" onclick={addStep}><i class='bx bx-plus'></i> Add Step</Button>
+          <div 
+              use:dndzone={{items: steps, flipDurationMs: 150, type: "steps"}}
+              on:consider={handleStepDndConsider}
+              on:finalize={handleStepDndFinalize}
+              class="pb-2"
+            >
             {#each steps as step (step.id)}
-              <div class="shadow-md space-y-2 flex flex-col sm:flex-row gap-4 mb-2">
+              <div class="flex gap-2 pt-2 w-full">
+                <div class="flex items-center">
+                  <div class="drag-handle cursor-move flex flex-col items-center">
+                    <i class='bx bx-dots-vertical-rounded'></i>
+                  </div>
+                </div>
                 <div class="sm:w-1/3 w-full flex flex-col gap-2">
                   <div class="text-m font-medium pl-1">Step {step.number}</div>
                   <div>
@@ -202,7 +249,8 @@
                 </div>
                 <Button variant="ghost" class="p-1 w-full sm:w-fit self-center" type="button" onclick={() => removeStep(step.id)}><i class='bx bx-trash'></i></Button>
               </div>
-            {/each}        
+            {/each}
+          </div>    
         </div>
       </form>
     </Card.Content>		

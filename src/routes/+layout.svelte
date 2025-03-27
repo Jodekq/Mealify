@@ -27,7 +27,10 @@
 </script>
 
 <svelte:head>
-	<title>Plate Pilot</title>
+	<title>Mealify</title>
+	<meta name="theme-color" content="#22c55e">
+	<meta name="robots" content="index,follow">
+	<meta name="googlebot" content="index,follow">
 </svelte:head>
 
 <LoadingBar loading={isLoading} progress={loadingProgress} />

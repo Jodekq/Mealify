@@ -23,11 +23,17 @@
   import { Search, ChevronLeft, ChevronRight } from "lucide-svelte";
   import { toast } from "svelte-sonner";
   import type { Meal } from "$lib/types";
-
-  // Calendar data
-  let meals: Record<string, Array<{ name: string; totalTime: number, id: string }>> = {};
-  let isLoading = false;
-  let mealSchedules: Record<string, string[]> = {};
+  
+  // Import the meal store
+  import { 
+    allMeals,
+    scheduledMeals,
+    mealSchedules,
+    isLoading,
+    initializeStore,
+    addMealToDay as storeMealAdd,
+    removeMealFromDay as storeMealRemove
+  } from "$lib/stores/mealsStore";
 
   // View state
   let viewMode: "month" | "week" = "month";
@@ -39,21 +45,29 @@
   const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   
   // Navigation and selection state
-  let allMeals: Meal[] = [];
   let filteredMeals: Meal[] = [];
   let searchQuery = "";
   let selectedDate: string = "";
   let openPopoverDate: string | null = null;
-
+  
+  // Store values
+  let meals: Record<string, Array<{ name: string; totalTime: number, id: string }>> = {};
+  let allMealsList: Meal[] = [];
+  let isLoadingData: boolean = false;
+  
+  // Subscribe to store values
+  $: meals = $scheduledMeals;
+  $: allMealsList = $allMeals;
+  $: isLoadingData = $isLoading;
+  
   // Generate calendar data based on current view
   $: calendarDays = generateCalendarDays(currentDate, viewMode);
   $: monthLabel = format(currentDate, "MMMM yyyy");
   $: weekLabel = `${format(startOfWeek(currentDate), "MMM d")} - ${format(endOfWeek(currentDate), "MMM d, yyyy")}`;
 
   onMount(async () => {
-    await fetchCalendarMeals();
-    await fetchAllMeals();
-    initializeMealSchedules();
+    // Initialize the store (fetches all data)
+    await initializeStore();
   });
 
   function generateCalendarDays(date: Date, view: "month" | "week") {
@@ -71,56 +85,10 @@
     }
   }
 
-  function initializeMealSchedules() {
-    mealSchedules = {};
-    
-    Object.entries(meals).forEach(([date, mealsForDate]) => {
-      mealsForDate.forEach(meal => {
-        if (!mealSchedules[meal.id]) {
-          mealSchedules[meal.id] = [];
-        }
-        
-        if (!mealSchedules[meal.id].includes(date)) {
-          mealSchedules[meal.id].push(date);
-        }
-      });
-    });
-  }
-
-  async function fetchCalendarMeals() {
-    try {
-      isLoading = true;
-      const response = await fetch("/api/schedule");
-      if (!response.ok) throw new Error("Failed to fetch data");
-
-      const data = await response.json();
-      meals = Object.assign({}, data.meals || {}); 
-    } catch (error) {
-      console.error("Error fetching meals:", error);
-    } finally {
-      isLoading = false;
-    }
-  }
-
-  async function fetchAllMeals() {
-    try {
-      const response = await fetch("/api/meals");
-      if (!response.ok) throw new Error("Failed to fetch meals");
-
-      const data = await response.json();
-      if (data.meals) {
-        allMeals = data.meals;
-        filteredMeals = [...allMeals];
-      }
-    } catch (error) {
-      console.error("Error fetching all meals:", error);
-    }
-  }
-
   function filterMeals(date: string) {
     const currentDayMealIds = (meals[date] || []).map(m => m.id);
     
-    return allMeals.filter(meal => {
+    return allMealsList.filter(meal => {
       const matchesSearch = !searchQuery || 
         meal.name.toLowerCase().includes(searchQuery.toLowerCase());
       const notAlreadyScheduled = !currentDayMealIds.includes(meal.id);
@@ -133,7 +101,7 @@
     if (selectedDate) {
       filteredMeals = filterMeals(selectedDate);
     } else {
-      filteredMeals = allMeals.filter(meal => 
+      filteredMeals = allMealsList.filter(meal => 
         !searchQuery || meal.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
@@ -169,14 +137,6 @@
 
   async function addMealToDay(mealId: string, date: string) {
     try {
-      isLoading = true;
-      
-      // Find the selected meal from allMeals
-      const meal = allMeals.find(m => m.id === mealId);
-      if (!meal) {
-        throw new Error("Meal not found");
-      }
-      
       // Check if meal is already added to this day
       const dayMeals = meals[date] || [];
       if (dayMeals.some(m => m.id === mealId)) {
@@ -184,127 +144,49 @@
         return;
       }
       
-      // Get the current scheduled dates for this meal
-      const currentDates = mealSchedules[mealId] || [];
+      // Find the meal to show in toast
+      const meal = allMealsList.find(m => m.id === mealId);
       
-      // Add the new date if it's not already in the list
-      if (!currentDates.includes(date)) {
-        currentDates.push(date);
+      // Use the store function to add the meal
+      const success = await storeMealAdd(mealId, date);
+      
+      if (success) {
+        toast.success(`Added ${meal?.name || 'Meal'} to ${format(new Date(date), "MMM dd")}`);
+        openPopoverDate = null;
+        
+        // Update the filtered meals to remove the one we just added
+        filteredMeals = filterMeals(date);
+      } else {
+        toast.error("Failed to add meal to calendar");
       }
-      
-      // Call the API with ALL dates for this meal
-      const response = await fetch(`/api/schedule/${mealId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          dates: currentDates
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Schedule API error:", errorData);
-        throw new Error("Failed to update schedule");
-      }
-      
-      // Update local state for calendar display
-      const updatedMeals = [...(meals[date] || [])];
-      updatedMeals.push({
-        id: meal.id,
-        name: meal.name,
-        totalTime: meal.totalTime
-      });
-      
-      meals = {
-        ...meals,
-        [date]: updatedMeals
-      };
-      
-      // Update our tracking of meal schedules
-      mealSchedules = {
-        ...mealSchedules,
-        [mealId]: currentDates
-      };
-      
-      toast.success(`Added ${meal.name} to ${format(new Date(date), "MMM dd")}`);
-      openPopoverDate = null;
-      
-      // Update the filtered meals to remove the one we just added
-      filteredMeals = filterMeals(date);
-      
     } catch (error) {
       console.error("Error adding meal to day:", error);
       toast.error("Failed to add meal to calendar");
-    } finally {
-      isLoading = false;
     }
   }
 
   async function removeMealFromDay(mealId: string, date: string) {
     try {
-      isLoading = true;
-      
       // Find the meal to show in the toast
       const meal = meals[date]?.find(m => m.id === mealId);
       const mealName = meal?.name || "Meal";
       
-      // Get the current scheduled dates for this meal
-      const currentDates = mealSchedules[mealId] || [];
+      // Use the store function to remove the meal
+      const success = await storeMealRemove(mealId, date);
       
-      // Remove this date from the list
-      const updatedDates = currentDates.filter(d => d !== date);
-      
-      // Call the API with the UPDATED list of dates (minus the removed one)
-      const response = await fetch(`/api/schedule/${mealId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          dates: updatedDates
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Schedule removal API error:", errorData);
-        throw new Error("Failed to remove from schedule");
-      }
-      
-      // Update local state for calendar display
-      if (meals[date]) {
-        meals = {
-          ...meals,
-          [date]: meals[date].filter(m => m.id !== mealId)
-        };
-      }
-      
-      // Update our tracking of meal schedules
-      if (updatedDates.length === 0) {
-        // Remove the meal from tracking if no dates left
-        const { [mealId]: _, ...restSchedules } = mealSchedules;
-        mealSchedules = restSchedules;
+      if (success) {
+        toast.success(`${mealName} removed from ${format(new Date(date), "MMM dd")}`);
+        
+        // Update the filtered meals since the removed meal can now be added again
+        if (openPopoverDate === date) {
+          filteredMeals = filterMeals(date);
+        }
       } else {
-        mealSchedules = {
-          ...mealSchedules,
-          [mealId]: updatedDates
-        };
+        toast.error("Failed to remove meal from calendar");
       }
-      
-      toast.success(`${mealName} removed from ${format(new Date(date), "MMM dd")}`);
-      
-      // Update the filtered meals since the removed meal can now be added again
-      if (openPopoverDate === date) {
-        filteredMeals = filterMeals(date);
-      }
-      
     } catch (error) {
       console.error("Error removing meal:", error);
       toast.error("Failed to remove meal from calendar");
-    } finally {
-      isLoading = false;
     }
   }
 
@@ -321,7 +203,7 @@
     
     return `
       relative
-      h-full min-h-[120px]
+      h-full min-h-[80px]
       border border-border
       p-1
       ${isToday ? 'bg-primary/10 border-primary' : 'bg-card'}

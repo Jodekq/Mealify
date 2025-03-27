@@ -68,7 +68,8 @@
 		"oslo": "^1.2.1",
 		"rss": "^1.2.2",
 		"satori": "^0.12.1",
-		"satori-html": "^0.3.2"
+		"satori-html": "^0.3.2",
+		"svelte-dnd-action": "^0.9.60"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [

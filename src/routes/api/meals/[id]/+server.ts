@@ -72,7 +72,7 @@ export async function PUT({ params, request }) {
           create: data.steps.map((step, index) => ({
             stepNumber: index + 1,
             text: step.text || "",
-            extraText: step.extra_text || null,
+            extraText: step.extraText || step.extra_text || null,
             description: step.description || null,
           })),
         },

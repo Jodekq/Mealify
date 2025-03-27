@@ -59,12 +59,6 @@
       progress: 25,
       icon: "bx-category"
     },
-    { 
-      title: "Search", 
-      description: "Search for specific saved plates",
-      progress: 35,
-      icon: "bx-search"
-    },
   ];
 
 </script>
